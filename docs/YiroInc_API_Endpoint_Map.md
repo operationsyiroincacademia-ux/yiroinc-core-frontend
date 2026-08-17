@@ -235,40 +235,659 @@ If a PATCH request contains no valid editable fields, the endpoint returns `400`
 
 ## Tutor Requests
 
-| Method           | Endpoint                        | Access        | Handler              | Main Success Data          |
-| ---------------- | ------------------------------- | ------------- | -------------------- | -------------------------- |
-| `POST`           | `/tutor-requests`               | Authenticated | `create_request()`   | `request_id`               |
-| `GET`            | `/tutor-requests`               | Authenticated | `get_requests()`     | `requests[]`, `pagination` |
-| `GET`            | `/tutor-requests/{id}`          | Authenticated | `get_request()`      | `request`                  |
-| `POST/PUT/PATCH` | `/tutor-requests/{id}/match`    | Admin         | `match_tutor()`      | `message`                  |
-| `POST/PUT/PATCH` | `/tutor-requests/{id}/start`    | Admin         | `start_session()`    | `message`                  |
-| `POST/PUT/PATCH` | `/tutor-requests/{id}/complete` | Admin         | `complete_session()` | `message`                  |
+Normal authenticated users can create tutor requests and list/view only their own tutor requests. Admin users can list and view all tutor requests.
+
+### Tutor Request Endpoints
+
+| Method | Endpoint | Access | Handler | Main Success Data |
+|---|---|---|---|---|
+| `POST` | `/tutor-requests` | Authenticated | `create_request()` | `request_id` |
+| `GET` | `/tutor-requests` | Authenticated | `get_requests()` | `requests[]`, `pagination` |
+| `GET` | `/tutor-requests/{id}` | Authenticated | `get_request()` | `request` |
+| `POST/PUT/PATCH` | `/tutor-requests/{id}/match` | Admin | `match_tutor()` | `message` |
+| `POST/PUT/PATCH` | `/tutor-requests/{id}/start` | Admin | `start_session()` | `message` |
+| `POST/PUT/PATCH` | `/tutor-requests/{id}/complete` | Admin | `complete_session()` | `message` |
+
+### Tutor Request Fields Returned
+
+`GET /tutor-requests` returns `requests[]`. `GET /tutor-requests/{id}` returns `request`. Both are selected directly from the tutor request table.
+
+```text
+id
+user_id
+exam_type
+exam_level
+preferred_timezone
+preferred_language
+additional_notes
+status
+assigned_tutor_id
+matched_by
+matched_at
+session_started_by
+session_started_at
+completed_by
+completed_at
+created_at
+updated_at
+```
+
+### Create Tutor Request
+
+`POST /tutor-requests`
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `exam_type` | Yes | Required, max length 100 |
+| `exam_level` | No | Max length 100 when provided |
+| `preferred_timezone` | No | Max length 100 when provided |
+| `preferred_language` | No | Max length 100 when provided |
+| `additional_notes` | No | Max length 2000 when provided |
+
+The authenticated user ID is taken from the JWT and stored as `user_id`.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "request_id": 123
+  }
+}
+```
+
+### List Tutor Requests
+
+`GET /tutor-requests`
+
+Supported query parameters:
+
+| Parameter | Behavior |
+|---|---|
+| `page` | Positive integer, defaults to `1` |
+| `per_page` | Positive integer, defaults to `20`, maximum `100` |
+| `status` | Optional sanitized status filter |
+| `sort` | Optional sort column. Allowed values: `created_at`, `status`, `exam_type`, `exam_level`, `matched_at`, `completed_at`, `updated_at`. Defaults to `created_at`. |
+| `order` | `ASC` or `DESC`. Defaults to `DESC`. |
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "requests": [],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 0,
+      "total_pages": 0
+    }
+  }
+}
+```
+
+### Get Tutor Request
+
+`GET /tutor-requests/{id}`
+
+Normal users can only retrieve their own request. Admins can retrieve any request.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "request": {}
+  }
+}
+```
+
+### Match Tutor
+
+`POST/PUT/PATCH /tutor-requests/{id}/match`
+
+Admin only.
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `assigned_tutor_id` | Yes | Numeric, positive integer, must match an existing WordPress user ID |
+
+Updates:
+
+```text
+status = matched
+assigned_tutor_id
+matched_by = current admin user ID
+matched_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Tutor matched successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/tutor-requests/{id}`.
+
+### Start Tutor Session
+
+`POST/PUT/PATCH /tutor-requests/{id}/start`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = in_progress
+session_started_by = current admin user ID
+session_started_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Tutoring session started successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/tutor-requests/{id}`.
+
+### Complete Tutor Session
+
+`POST/PUT/PATCH /tutor-requests/{id}/complete`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = completed
+completed_by = current admin user ID
+completed_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Tutoring session completed successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/tutor-requests/{id}`.
+
+### Tutor Request Statuses
+
+The current status service defines:
+
+```text
+pending
+matched
+in_progress
+completed
+cancelled
+```
 
 ---
 
 ## Consulting Requests
 
-| Method           | Endpoint                             | Access        | Handler                 | Main Success Data          |
-| ---------------- | ------------------------------------ | ------------- | ----------------------- | -------------------------- |
-| `POST`           | `/consulting-requests`               | Authenticated | `create_request()`      | `request_id`               |
-| `GET`            | `/consulting-requests`               | Authenticated | `get_requests()`        | `requests[]`, `pagination` |
-| `GET`            | `/consulting-requests/{id}`          | Authenticated | `get_request()`         | `request`                  |
-| `POST/PUT/PATCH` | `/consulting-requests/{id}/assign`   | Admin         | `assign_consultant()`   | `message`                  |
-| `POST/PUT/PATCH` | `/consulting-requests/{id}/start`    | Admin         | `start_consulting()`    | `message`                  |
-| `POST/PUT/PATCH` | `/consulting-requests/{id}/complete` | Admin         | `complete_consulting()` | `message`                  |
+Normal authenticated users can create consulting requests and list/view only their own consulting requests. Admin users can list and view all consulting requests.
+
+### Consulting Request Endpoints
+
+| Method | Endpoint | Access | Handler | Main Success Data |
+|---|---|---|---|---|
+| `POST` | `/consulting-requests` | Authenticated | `create_request()` | `request_id` |
+| `GET` | `/consulting-requests` | Authenticated | `get_requests()` | `requests[]`, `pagination` |
+| `GET` | `/consulting-requests/{id}` | Authenticated | `get_request()` | `request` |
+| `POST/PUT/PATCH` | `/consulting-requests/{id}/assign` | Admin | `assign_consultant()` | `message` |
+| `POST/PUT/PATCH` | `/consulting-requests/{id}/start` | Admin | `start_consulting()` | `message` |
+| `POST/PUT/PATCH` | `/consulting-requests/{id}/complete` | Admin | `complete_consulting()` | `message` |
+
+### Consulting Request Fields Returned
+
+`GET /consulting-requests` returns `requests[]`. `GET /consulting-requests/{id}` returns `request`. Both are selected directly from the consulting request table.
+
+```text
+id
+user_id
+service_type
+organization_name
+contact_person
+contact_email
+contact_phone
+project_summary
+budget
+preferred_date
+status
+assigned_to
+assigned_by
+assigned_at
+started_by
+started_at
+admin_note
+completed_by
+completed_at
+created_at
+updated_at
+```
+
+### Create Consulting Request
+
+`POST /consulting-requests`
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `service_type` | Yes | Required, max length 100 |
+| `organization_name` | No | Max length 255 when provided |
+| `contact_person` | Yes | Required, max length 150 |
+| `contact_email` | Yes | Required, valid email, max length 255 |
+| `contact_phone` | No | Max length 50 when provided |
+| `project_summary` | Yes | Required, max length 5000 |
+| `budget` | No | Positive number when provided and non-empty |
+| `preferred_date` | No | Date when provided and non-empty |
+
+The authenticated user ID is taken from the JWT and stored as `user_id`.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "request_id": 123
+  }
+}
+```
+
+### List Consulting Requests
+
+`GET /consulting-requests`
+
+Supported query parameters:
+
+| Parameter | Behavior |
+|---|---|
+| `page` | Positive integer, defaults to `1` |
+| `per_page` | Positive integer, defaults to `20`, maximum `100` |
+| `status` | Optional sanitized status filter |
+| `sort` | Optional sort column. Allowed values: `created_at`, `status`, `service_type`, `preferred_date`, `completed_at`, `updated_at`. Defaults to `created_at`. |
+| `order` | `ASC` or `DESC`. Defaults to `DESC`. |
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "requests": [],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 0,
+      "total_pages": 0
+    }
+  }
+}
+```
+
+### Get Consulting Request
+
+`GET /consulting-requests/{id}`
+
+Normal users can only retrieve their own request. Admins can retrieve any request.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "request": {}
+  }
+}
+```
+
+### Assign Consultant
+
+`POST/PUT/PATCH /consulting-requests/{id}/assign`
+
+Admin only.
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `assigned_to` | Yes | Numeric, positive integer, must match an existing WordPress user ID |
+
+Updates:
+
+```text
+status = assigned
+assigned_to
+assigned_by = current admin user ID
+assigned_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Consultant assigned successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/consulting-requests/{id}`.
+
+### Start Consulting
+
+`POST/PUT/PATCH /consulting-requests/{id}/start`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = in_progress
+started_by = current admin user ID
+started_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Consulting engagement started successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/consulting-requests/{id}`.
+
+### Complete Consulting
+
+`POST/PUT/PATCH /consulting-requests/{id}/complete`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = completed
+completed_by = current admin user ID
+completed_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Consulting engagement completed successfully."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/consulting-requests/{id}`.
+
+### Consulting Request Statuses
+
+The current status service defines:
+
+```text
+pending
+under_review
+assigned
+in_progress
+completed
+cancelled
+```
 
 ---
 
 ## Procurements
 
-| Method           | Endpoint                       | Access        | Handler                | Main Success Data              |
-| ---------------- | ------------------------------ | ------------- | ---------------------- | ------------------------------ |
-| `POST`           | `/procurements`                | Authenticated | `create_procurement()` | `procurement_id`               |
-| `GET`            | `/procurements`                | Authenticated | `get_procurements()`   | `procurements[]`, `pagination` |
-| `GET`            | `/procurements/{id}`           | Authenticated | `get_procurement()`    | `procurement`                  |
-| `POST/PUT/PATCH` | `/procurements/{id}/ordered`   | Admin         | `mark_ordered()`       | `message`                      |
-| `POST/PUT/PATCH` | `/procurements/{id}/shipped`   | Admin         | `mark_shipped()`       | `message`                      |
-| `POST/PUT/PATCH` | `/procurements/{id}/delivered` | Admin         | `mark_delivered()`     | `message`                      |
+Normal authenticated users can create procurements and list/view only their own procurements. Admin users can list and view all procurements.
+
+### Procurement Endpoints
+
+| Method | Endpoint | Access | Handler | Main Success Data |
+|---|---|---|---|---|
+| `POST` | `/procurements` | Authenticated | `create_procurement()` | `procurement_id` |
+| `GET` | `/procurements` | Authenticated | `get_procurements()` | `procurements[]`, `pagination` |
+| `GET` | `/procurements/{id}` | Authenticated | `get_procurement()` | `procurement` |
+| `POST/PUT/PATCH` | `/procurements/{id}/ordered` | Admin | `mark_ordered()` | `message` |
+| `POST/PUT/PATCH` | `/procurements/{id}/shipped` | Admin | `mark_shipped()` | `message` |
+| `POST/PUT/PATCH` | `/procurements/{id}/delivered` | Admin | `mark_delivered()` | `message` |
+
+### Procurement Fields Returned
+
+`GET /procurements` returns `procurements[]`. `GET /procurements/{id}` returns `procurement`. Both are selected directly from the procurements table.
+
+```text
+id
+order_id
+user_id
+procurement_reference
+supplier_name
+tracking_number
+courier
+status
+expected_delivery_date
+ordered_by
+ordered_at
+shipped_by
+shipped_at
+delivered_by
+delivered_at
+admin_note
+created_at
+updated_at
+```
+
+### Create Procurement
+
+`POST /procurements`
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `order_id` | Yes | Required, numeric, positive integer, must belong to the authenticated user |
+| `procurement_reference` | Yes | Required, max length 100 |
+| `expected_delivery_date` | No | Date when provided and non-empty |
+
+The authenticated user ID is taken from the JWT and stored as `user_id`.
+
+Normal users cannot set these processing/admin fields during creation:
+
+```text
+supplier_name
+tracking_number
+courier
+admin_note
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "procurement_id": 123
+  }
+}
+```
+
+### List Procurements
+
+`GET /procurements`
+
+Supported query parameters:
+
+| Parameter | Behavior |
+|---|---|
+| `page` | Positive integer, defaults to `1` |
+| `per_page` | Positive integer, defaults to `20`, maximum `100` |
+| `status` | Optional sanitized status filter |
+| `sort` | Optional sort column. Allowed values: `created_at`, `status`, `expected_delivery_date`. Defaults to `created_at`. |
+| `order` | `ASC` or `DESC`. Defaults to `DESC`. |
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "procurements": [],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 0,
+      "total_pages": 0
+    }
+  }
+}
+```
+
+### Get Procurement
+
+`GET /procurements/{id}`
+
+Normal users can only retrieve their own procurement. Admins can retrieve any procurement.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "procurement": {}
+  }
+}
+```
+
+### Mark Procurement Ordered
+
+`POST/PUT/PATCH /procurements/{id}/ordered`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = ordered
+ordered_by = current admin user ID
+ordered_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Procurement marked as ordered."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/procurements/{id}`.
+
+### Mark Procurement Shipped
+
+`POST/PUT/PATCH /procurements/{id}/shipped`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = shipped
+shipped_by = current admin user ID
+shipped_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Procurement marked as shipped."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/procurements/{id}`.
+
+### Mark Procurement Delivered
+
+`POST/PUT/PATCH /procurements/{id}/delivered`
+
+Admin only. No request body is used.
+
+Updates:
+
+```text
+status = delivered
+delivered_by = current admin user ID
+delivered_at = current WordPress time
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Procurement marked as delivered."
+  }
+}
+```
+
+Creates timeline, notification, and audit records. The notification `action_url` is `/procurements/{id}`.
+
+### Procurement Statuses
+
+The current status service defines:
+
+```text
+pending
+sourcing
+ordered
+shipped
+delivered
+cancelled
+```
 
 ---
 

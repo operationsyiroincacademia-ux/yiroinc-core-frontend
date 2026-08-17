@@ -7,6 +7,8 @@ import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { describeApiError } from "@/lib/api/errors";
+import { useCreateTutorRequest } from "@/features/tutoring/hooks";
 import {
   EXAM_LEVEL_OPTIONS,
   EXAM_TYPE_OPTIONS,
@@ -15,11 +17,10 @@ import {
 } from "@/features/tutoring/preview-data";
 
 /**
- * Only the fields supported by the backend are collected here:
+ * Only the fields supported by POST /tutor-requests are collected here:
  * exam_type, exam_level, preferred_timezone, preferred_language and
- * additional_notes. At integration time this form posts those exact fields
- * to the create tutoring request endpoint; the option lists come from the
- * tutoring data module (preview values during the visual stage).
+ * additional_notes. The backend requires exam_type; the remaining fields are
+ * optional and are omitted when left blank.
  */
 
 type Form = {
@@ -55,9 +56,10 @@ function FieldError({ message }: { message?: string }) {
 
 export function NewTutoringRequestPage() {
   const navigate = useNavigate();
+  const createRequest = useCreateTutorRequest();
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
-  const [status, setStatus] = useState<"idle" | "submitting" | "submitted">("idle");
+  const [submitted, setSubmitted] = useState(false);
 
   const set = (key: keyof Form) => (value: string) => {
     setForm((current) => ({
@@ -66,7 +68,7 @@ export function NewTutoringRequestPage() {
       ...(key === "examType" ? { examLevel: "" } : null),
     }));
     setErrors((current) => ({ ...current, [key]: undefined }));
-    setStatus("idle");
+    setSubmitted(false);
   };
 
   const levels = EXAM_LEVEL_OPTIONS[form.examType] ?? [];
@@ -74,25 +76,34 @@ export function NewTutoringRequestPage() {
   const validate = (): Errors => {
     const next: Errors = {};
     if (!form.examType) next.examType = "Select an exam type.";
-    if (!form.examLevel) next.examLevel = "Select an exam level.";
-    if (!form.timezone) next.timezone = "Select your preferred timezone.";
-    if (!form.language) next.language = "Select your preferred language.";
-    if (form.notes.length > 1000)
-      next.notes = "Notes must be 1000 characters or fewer.";
+    if (form.examType.length > 100) next.examType = "Exam type must be 100 characters or fewer.";
+    if (form.examLevel.length > 100) next.examLevel = "Exam level must be 100 characters or fewer.";
+    if (form.timezone.length > 100) next.timezone = "Timezone must be 100 characters or fewer.";
+    if (form.language.length > 100) next.language = "Language must be 100 characters or fewer.";
+    if (form.notes.length > 2000) next.notes = "Notes must be 2000 characters or fewer.";
     return next;
   };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      setStatus("idle");
       return;
     }
-    setStatus("submitting");
-    // Visual stage only — the create request call is wired at API integration.
-    window.setTimeout(() => setStatus("submitted"), 500);
+    try {
+      await createRequest.mutateAsync({
+        exam_type: form.examType,
+        exam_level: optional(form.examLevel),
+        preferred_timezone: optional(form.timezone),
+        preferred_language: optional(form.language),
+        additional_notes: optional(form.notes),
+      });
+      setForm(EMPTY);
+      setSubmitted(true);
+    } catch {
+      setSubmitted(false);
+    }
   };
 
   return (
@@ -110,16 +121,13 @@ export function NewTutoringRequestPage() {
         description="Tell us what you are preparing for and how you prefer to be tutored."
       />
 
-      {status === "submitted" && (
+      {submitted && (
         <div className="mb-6 flex items-start gap-3 bg-success-soft px-5 py-4">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              Tutoring request submitted
-            </p>
+            <p className="text-sm font-semibold text-foreground">Tutoring request submitted</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Your request is now under review. You will be notified once a tutor is
-              matched.
+              Your request is now under review. You will be notified once a tutor is matched.
             </p>
             <Button
               variant="outline"
@@ -133,14 +141,18 @@ export function NewTutoringRequestPage() {
         </div>
       )}
 
+      {createRequest.isError && (
+        <div className="mb-6 bg-danger-soft px-5 py-4 text-sm text-danger">
+          {describeApiError(createRequest.error, "Your tutoring request could not be submitted.")}
+        </div>
+      )}
+
       <form onSubmit={onSubmit} className="max-w-3xl">
         <section className="border border-border bg-card">
           <header className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-bold tracking-tight text-foreground">
-              Request details
-            </h2>
+            <h2 className="text-sm font-bold tracking-tight text-foreground">Request details</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              All fields are required except additional notes.
+              Exam type is required. Other fields help us match the request.
             </p>
           </header>
 
@@ -231,9 +243,7 @@ export function NewTutoringRequestPage() {
               />
               <div className="mt-1.5 flex items-center justify-between gap-3">
                 <FieldError message={errors.notes} />
-                <p className="ml-auto text-xs text-muted-foreground">
-                  {form.notes.length}/1000
-                </p>
+                <p className="ml-auto text-xs text-muted-foreground">{form.notes.length}/2000</p>
               </div>
             </div>
           </div>
@@ -242,12 +252,17 @@ export function NewTutoringRequestPage() {
             <Button asChild variant="outline" type="button">
               <RoleLink to="/tutoring">Cancel</RoleLink>
             </Button>
-            <Button type="submit" disabled={status === "submitting"}>
-              {status === "submitting" ? "Submitting…" : "Submit request"}
+            <Button type="submit" disabled={createRequest.isPending}>
+              {createRequest.isPending ? "Submitting…" : "Submit request"}
             </Button>
           </footer>
         </section>
       </form>
     </AppShell>
   );
+}
+
+function optional(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
