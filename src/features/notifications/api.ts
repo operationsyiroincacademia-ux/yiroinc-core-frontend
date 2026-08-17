@@ -21,16 +21,23 @@ import {
   type Pagination,
 } from "@/lib/api/envelope";
 
+export type NotificationType = "info" | "success" | "warning";
+
 export type Notification = {
   id: string | number;
-  title: string;
-  message: string;
-  type?: string | null;
-  is_read?: string | number | boolean | null;
-  read_at?: string | null;
-  created_at?: string | null;
+  user_id?: string | number | null;
+  sender_id?: string | number | null;
   related_type?: string | null;
   related_id?: string | number | null;
+  title: string;
+  message: string;
+  type?: NotificationType | null;
+  is_read?: string | number | boolean | null;
+  is_dismissed?: string | number | boolean | null;
+  action_url?: string | null;
+  delivery_channel?: string | null;
+  read_at?: string | null;
+  created_at?: string | null;
 };
 
 function token() {
@@ -44,17 +51,21 @@ export function isRead(notification: Notification): boolean {
   return String(flag) === "1" || String(flag).toLowerCase() === "true";
 }
 
-export async function fetchNotifications(
-  params: { page?: number; perPage?: number } = {},
-) {
+export function isDismissed(notification: Notification): boolean {
+  const flag = notification.is_dismissed;
+  if (flag === undefined || flag === null) return false;
+  if (typeof flag === "boolean") return flag;
+  return String(flag) === "1" || String(flag).toLowerCase() === "true";
+}
+
+export async function fetchNotifications(params: { page?: number; perPage?: number } = {}) {
   const query = new URLSearchParams({
     page: String(params.page ?? 1),
     per_page: String(params.perPage ?? 20),
   });
-  const res = await apiRequest<ApiEnvelope<unknown>>(
-    `/notifications?${query.toString()}`,
-    { token: token() },
-  );
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/notifications?${query.toString()}`, {
+    token: token(),
+  });
   return {
     notifications: pickList<Notification>(res.data, "notifications"),
     pagination: pickPagination(res.data) as Pagination | null,

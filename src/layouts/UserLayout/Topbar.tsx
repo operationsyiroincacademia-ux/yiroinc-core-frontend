@@ -7,11 +7,15 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { initialsOf, type CurrentUser } from "@/lib/auth/current-user";
 import { EXPERIENCE_LABEL } from "@/lib/roles";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useUnreadCount } from "@/features/notifications/hooks";
+import { roleHref } from "@/lib/roles/experience-context";
 
 export function Topbar({ user }: { user: CurrentUser }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const unreadCount = useUnreadCount();
+  const unreadNotifications = unreadCount.data ?? 0;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background px-4 sm:px-6">
@@ -24,24 +28,19 @@ export function Topbar({ user }: { user: CurrentUser }) {
         </SheetTrigger>
         <SheetContent side="left" className="w-72 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarNav
-            experience={user.experience}
-            onNavigate={() => setMobileOpen(false)}
-          />
+          <SidebarNav experience={user.experience} onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
-
-
-
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
         <button
           type="button"
           aria-label="Notifications"
+          onClick={() => navigate({ to: roleHref(user.experience, "/notifications") })}
           className="relative inline-flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Bell className="h-5 w-5" strokeWidth={1.9} />
-          {user.unreadNotifications > 0 && (
+          {unreadNotifications > 0 && (
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent ring-2 ring-background" />
           )}
         </button>

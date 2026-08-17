@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Bell, Check, CheckCheck, X } from "lucide-react";
+import { Bell, Check, CheckCheck, ExternalLink, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -13,6 +14,8 @@ import {
 } from "@/features/notifications/hooks";
 import { describeApiError } from "@/lib/api/errors";
 import { formatDateTime, humaniseStatus } from "@/features/commerce/format";
+import { roleHref, useExperience } from "@/lib/roles/experience-context";
+import type { Experience } from "@/lib/roles";
 
 const FILTERS = ["All", "Unread", "Read"] as const;
 
@@ -22,12 +25,14 @@ const FILTERS = ["All", "Unread", "Read"] as const;
  */
 export function NotificationsPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const navigate = useNavigate();
+  const experience = useExperience();
   const { data, isLoading, isError, error } = useNotifications(1, 50);
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const dismiss = useDismissNotification();
 
-  const items: Notification[] = data?.notifications ?? [];
+  const items: Notification[] = useMemo(() => data?.notifications ?? [], [data]);
   const unreadCount = items.filter((item) => !isRead(item)).length;
 
   const filtered = useMemo(() => {
@@ -86,9 +91,7 @@ export function NotificationsPage() {
         </section>
       ) : isError ? (
         <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm font-semibold text-foreground">
-            Notifications could not be loaded
-          </p>
+          <p className="text-sm font-semibold text-foreground">Notifications could not be loaded</p>
           <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
             {describeApiError(error, "Please try again in a moment.")}
           </p>
@@ -115,6 +118,7 @@ export function NotificationsPage() {
           {filtered.map((item, index) => {
             const read = isRead(item);
             const category = item.type ? humaniseStatus(item.type) : null;
+            const actionHref = resolveNotificationAction(item.action_url, experience);
             return (
               <li
                 key={String(item.id)}
@@ -161,6 +165,17 @@ export function NotificationsPage() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 sm:pl-4">
+                  {actionHref && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate({ to: actionHref })}
+                      aria-label={`Open "${item.title}"`}
+                    >
+                      <ExternalLink className="h-4 w-4" strokeWidth={2} />
+                      Open
+                    </Button>
+                  )}
                   {!read && (
                     <Button
                       variant="outline"
@@ -191,4 +206,30 @@ export function NotificationsPage() {
       )}
     </AppShell>
   );
+}
+
+function resolveNotificationAction(
+  actionUrl: string | null | undefined,
+  experience: Experience,
+): string | null {
+  if (!actionUrl) return null;
+
+  const normalized = actionUrl.startsWith("/") ? actionUrl : `/${actionUrl}`;
+  if (
+    normalized === "/orders" ||
+    normalized.startsWith("/orders/") ||
+    normalized === "/payments" ||
+    normalized.startsWith("/payments/")
+  ) {
+    return roleHref(experience, normalized);
+  }
+
+  if (
+    experience === "exam" &&
+    (normalized === "/tutor-requests" || normalized.startsWith("/tutor-requests/"))
+  ) {
+    return roleHref(experience, normalized.replace("/tutor-requests", "/tutoring"));
+  }
+
+  return null;
 }
