@@ -274,11 +274,351 @@ If a PATCH request contains no valid editable fields, the endpoint returns `400`
 
 ## Resources
 
-| Method | Endpoint          | Access        | Handler             | Main Success Data |
-| ------ | ----------------- | ------------- | ------------------- | ----------------- |
-| `POST` | `/resources`      | Admin         | `create_resource()` | `resource_id`     |
-| `GET`  | `/resources`      | Authenticated | `get_resources()`   | `resources[]`     |
-| `GET`  | `/resources/{id}` | Authenticated | `get_resource()`    | `resource`        |
+Resources are platform content created by YiroInc administrators and made available to authenticated users based on resource visibility and targeting rules.
+
+A resource can be either:
+
+- an uploaded protected file
+- an external URL
+
+### Resource Endpoints
+
+| Method | Endpoint | Access | Handler | Main Success Data |
+|---|---|---|---|---|
+| `POST` | `/resources` | Admin | `create_resource()` | `resource_id` |
+| `GET` | `/resources` | Authenticated | `get_resources()` | `resources[]` |
+| `GET` | `/resources/{id}` | Authenticated | `get_resource()` | `resource` |
+
+---
+
+### Resource Fields Returned
+
+`GET /resources` and `GET /resources/{id}` return the same resource structure.
+
+```text
+id
+title
+description
+category
+source_type
+file_id
+file_name
+file_format
+mime_type
+file_size
+external_url
+profile_type
+exam_type
+is_public
+created_at
+updated_at
+```
+
+Example file resource:
+
+```json
+{
+  "id": 1,
+  "title": "CFA Level 1 Study Guide",
+  "description": "Introductory study material.",
+  "category": "study-guide",
+  "source_type": "file",
+  "file_id": 12,
+  "file_name": "guide.pdf",
+  "file_format": "PDF",
+  "mime_type": "application/pdf",
+  "file_size": 204800,
+  "external_url": null,
+  "profile_type": "cfa_candidate",
+  "exam_type": "CFA",
+  "is_public": 0,
+  "created_at": "2026-08-17 10:15:00",
+  "updated_at": "2026-08-17 10:15:00"
+}
+```
+
+---
+
+### Resource Source Types
+
+`source_type` determines how the resource is accessed.
+
+Supported values:
+
+```text
+file
+external
+```
+
+#### File Resource
+
+A file resource uses:
+
+```text
+source_type = file
+```
+
+and requires a valid `file_id` referencing a Resource file uploaded through `/files/upload`.
+
+#### External Resource
+
+An external resource uses:
+
+```text
+source_type = external
+```
+
+and requires a valid `external_url`.
+
+A Resource cannot simultaneously use both a file and an external URL.
+
+---
+
+### Create Resource
+
+`POST /resources` is admin-only.
+
+Accepted JSON fields:
+
+| Field | Required | Notes |
+|---|---|---|
+| `title` | Yes | Maximum 255 characters |
+| `source_type` | Yes | Must be `file` or `external` |
+| `description` | No | Nullable |
+| `category` | No | Nullable, maximum 100 characters |
+| `file_id` | Conditional | Required when `source_type=file`; forbidden for external resources |
+| `external_url` | Conditional | Required when `source_type=external`; forbidden for file resources |
+| `profile_type` | Conditional | Required for non-public resources |
+| `exam_type` | No | Can only be used when `profile_type` is provided |
+| `is_public` | No | Stored as boolean-like `1` or `0` |
+
+Supported `profile_type` values:
+
+```text
+academic_user
+exam_candidate
+corporate_client
+cfa_candidate
+frm_candidate
+consulting_lead
+```
+
+Unsupported profile types are rejected.
+
+---
+
+### Example File Resource Creation
+
+A Resource file must first be uploaded through `/files/upload`.
+
+After receiving the resulting `file_id`, create the Resource:
+
+```json
+{
+  "title": "CFA Level 1 Study Guide",
+  "description": "Introductory study material.",
+  "category": "study-guide",
+  "source_type": "file",
+  "file_id": 42,
+  "profile_type": "cfa_candidate",
+  "exam_type": "CFA",
+  "is_public": false
+}
+```
+
+The backend validates that the referenced file:
+
+- exists
+- has `related_type=resource`
+- has `file_type=resource_file`
+- has not already been linked to another Resource
+
+After successful Resource creation, the uploaded file is linked to the newly created Resource.
+
+---
+
+### Example External Resource Creation
+
+```json
+{
+  "title": "CFA Institute Curriculum",
+  "description": "External curriculum page.",
+  "category": "external-link",
+  "source_type": "external",
+  "external_url": "https://www.cfainstitute.org/",
+  "is_public": true
+}
+```
+
+External resources do not use `file_id`.
+
+---
+
+### Resource File Upload
+
+Resource files use the existing:
+
+```text
+POST /files/upload
+```
+
+Access: **Admin only for Resource uploads**
+
+Content type:
+
+```text
+multipart/form-data
+```
+
+Required fields:
+
+```text
+file
+related_type = resource
+file_type = resource_file
+```
+
+`related_id` is optional during the initial upload and will normally be omitted or sent as `0`.
+
+Example:
+
+```text
+file: <uploaded file>
+related_type: resource
+file_type: resource_file
+```
+
+The upload response includes:
+
+```text
+file_id
+related_type
+related_id
+file_type
+file_name
+original_name
+mime_type
+file_size
+```
+
+Resource uploads support permitted document, image and video formats up to **50 MB**.
+
+This does not change the existing payment-proof upload rules.
+
+---
+
+### Resource File Download
+
+Protected Resource files are downloaded using:
+
+```text
+GET /files/{id}/download
+```
+
+where `{id}` is the Resource's `file_id`.
+
+The request requires Bearer JWT authentication.
+
+Resource file downloads use Resource visibility rules rather than ordinary file ownership alone.
+
+An authenticated non-owner may download a Resource file only when the associated Resource is accessible to that user.
+
+Payment-proof file ownership rules remain unchanged.
+
+---
+
+### Resource Visibility
+
+Admins can access all Resources.
+
+For normal authenticated users:
+
+#### Public Resource
+
+When:
+
+```text
+is_public = 1
+```
+
+the Resource is available to all authenticated users.
+
+#### Targeted Resource
+
+When:
+
+```text
+is_public = 0
+```
+
+the user's `profile_type` must match the Resource's `profile_type`.
+
+If the Resource also contains an `exam_type`, the user's stored `exam_type` must match it.
+
+Example:
+
+```text
+Resource:
+profile_type = cfa_candidate
+exam_type = CFA
+
+User:
+profile_type = cfa_candidate
+exam_type = CFA
+```
+
+The user can access the Resource.
+
+The same visibility rules apply to:
+
+```text
+GET /resources
+GET /resources/{id}
+GET /files/{file_id}/download
+```
+
+Therefore, users cannot bypass Resource visibility by directly requesting a Resource ID or file ID.
+
+`exam_type` matching currently uses exact string matching.
+
+---
+
+### Legacy Resources
+
+Resources created before database version `1.0.2` may not contain a valid file association.
+
+Legacy rows where:
+
+```text
+source_type = file
+file_id = NULL
+```
+
+are not exposed to normal authenticated users as valid downloadable Resources.
+
+Admins may still see these records for administrative/cleanup purposes.
+
+---
+
+### Current Resource Limitations
+
+There are currently no Resource update or delete endpoints.
+
+The backend currently supports:
+
+```text
+Create
+List
+View
+Upload file
+Download file
+External link
+Visibility/targeting
+```
+
+Resource editing and deletion will require additional endpoints when the Resource management section of the Admin frontend is implemented.
+
+`exam_type` currently uses exact string matching. The future Admin UI should preferably use controlled exam-type options rather than arbitrary free-text values.
 
 ---
 
