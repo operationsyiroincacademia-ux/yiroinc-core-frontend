@@ -1,0 +1,2 @@
+Host github-yiroinc    HostName github.com    User git    IdentityFile ~/.ssh/id_ed25519_yiroinc    IdentitiesOnly yes
+
