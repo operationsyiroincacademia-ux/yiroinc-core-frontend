@@ -1,10 +1,11 @@
 import { EmptyState, SectionCard } from "@/components/shared/DashboardCard";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 import {
   formatDate,
   formatMoney,
   humaniseStatus,
-  paymentBadge,
   toFlag,
   toNumber,
 } from "@/features/commerce/format";
@@ -49,9 +50,9 @@ export function AdminDashboardPage() {
           icon: ShoppingBag,
         },
         {
-          label: "Payments awaiting verification",
+          label: "Payments awaiting approval",
           value: toNumber(summary.payments.awaiting_verification),
-          detail: "Proof submitted for review",
+          detail: "Proof submitted for approval",
           icon: CreditCard,
         },
         {
@@ -141,15 +142,18 @@ export function AdminDashboardPage() {
 
           <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
             <SectionCard
-              title="Payments awaiting verification"
-              description="Payments with proof uploaded and ready for admin review."
+              title="Payments awaiting approval"
+              description="Payments with proof uploaded and ready for admin approval."
             >
               {pendingPayments.length === 0 ? (
-                <EmptyState message="No payments are awaiting verification." />
+                <EmptyState message="No payments are awaiting approval." />
               ) : (
                 <ul className="divide-y divide-border">
                   {pendingPayments.map((payment) => {
-                    const badge = paymentBadge(payment.payment_status, toFlag(payment.has_pop));
+                    const badge = adminPaymentBadge(
+                      payment.payment_status,
+                      toFlag(payment.has_pop),
+                    );
                     return (
                       <li
                         key={String(payment.id)}
@@ -157,7 +161,13 @@ export function AdminDashboardPage() {
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            {payment.payment_reference}
+                            <Link
+                              to="/admin/payments/$paymentId"
+                              params={{ paymentId: String(payment.id) }}
+                              className="hover:text-primary hover:underline"
+                            >
+                              {payment.payment_reference}
+                            </Link>
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             Order #{payment.order_id} · {paymentAmount(payment)} ·{" "}
@@ -170,6 +180,11 @@ export function AdminDashboardPage() {
                   })}
                 </ul>
               )}
+              <div className="border-t border-border px-5 py-4">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/admin/payments">View all payments</Link>
+                </Button>
+              </div>
             </SectionCard>
 
             <SectionCard title="Recent activity" description="Latest administrative events.">
@@ -220,4 +235,18 @@ function SummaryCard({
 function paymentAmount(payment: { amount_paid: string | number; currency?: string | null }) {
   const amount = toNumber(payment.amount_paid);
   return payment.currency ? formatMoney(amount, payment.currency) : amount.toLocaleString();
+}
+
+function adminPaymentBadge(
+  status: string | null | undefined,
+  hasProof: boolean,
+): { label: string; tone: "success" | "danger" | "warning" | "info" | "neutral" } {
+  const value = String(status ?? "");
+  if (value === "verified") return { label: "Approved", tone: "success" };
+  if (value === "rejected") return { label: "Rejected", tone: "danger" };
+  if ((value === "pending" || value === "submitted") && hasProof) {
+    return { label: "Awaiting approval", tone: "info" };
+  }
+  if (value === "pending" || value === "submitted") return { label: "Pending", tone: "warning" };
+  return { label: value ? humaniseStatus(value) : "—", tone: "neutral" };
 }

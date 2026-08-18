@@ -26,6 +26,7 @@ export type Order = {
   total_price: string | number;
   currency: string;
   order_status: string;
+  admin_order_status?: string | null;
   payment_status: string;
   fulfillment_status: string;
   customer_note?: string | null;

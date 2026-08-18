@@ -80,7 +80,11 @@ const blueprints: Record<Experience, NavBlueprint> = {
     overview: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
     services: {
       label: "Administration",
-      items: [],
+      items: [
+        { label: "Orders", to: "/orders", icon: ShoppingBag },
+        { label: "Payments", to: "/payments", icon: CreditCard },
+        { label: "Requests", to: "/requests", icon: ClipboardList },
+      ],
     },
   },
 };

@@ -12,10 +12,7 @@ const TOKEN_KEY = "yac_token";
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return (
-      window.localStorage.getItem(TOKEN_KEY) ??
-      window.sessionStorage.getItem(TOKEN_KEY)
-    );
+    return window.localStorage.getItem(TOKEN_KEY) ?? window.sessionStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
@@ -25,7 +22,10 @@ export function setAuthToken(token: string | null) {
   if (typeof window === "undefined") return;
   try {
     if (token) window.localStorage.setItem(TOKEN_KEY, token);
-    else window.localStorage.removeItem(TOKEN_KEY);
+    else {
+      window.localStorage.removeItem(TOKEN_KEY);
+      window.sessionStorage.removeItem(TOKEN_KEY);
+    }
   } catch {
     /* storage unavailable */
   }

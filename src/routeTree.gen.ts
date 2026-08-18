@@ -33,6 +33,11 @@ import { Route as AcademicProfileIndexRouteImport } from './routes/academic.prof
 import { Route as AcademicResourcesIndexRouteImport } from './routes/academic.resources.index'
 import { Route as AcademicServicesIndexRouteImport } from './routes/academic.services.index'
 import { Route as AcademicServicesProductIdRouteImport } from './routes/academic.services.$productId'
+import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
+import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin.orders.$orderId'
+import { Route as AdminPaymentsIndexRouteImport } from './routes/admin.payments.index'
+import { Route as AdminPaymentsPaymentIdRouteImport } from './routes/admin.payments.$paymentId'
+import { Route as AdminRequestsIndexRouteImport } from './routes/admin.requests.index'
 import { Route as CorporateCheckoutOrderIdRouteImport } from './routes/corporate.checkout.$orderId'
 import { Route as CorporateConsultingIndexRouteImport } from './routes/corporate.consulting.index'
 import { Route as CorporateNotificationsIndexRouteImport } from './routes/corporate.notifications.index'
@@ -58,6 +63,9 @@ import { Route as ExamServicesProductIdRouteImport } from './routes/exam.service
 import { Route as ExamTutoringIndexRouteImport } from './routes/exam.tutoring.index'
 import { Route as ExamTutoringRequestIdRouteImport } from './routes/exam.tutoring.$requestId'
 import { Route as ExamTutoringNewRouteImport } from './routes/exam.tutoring.new'
+import { Route as AdminRequestsConsultingRequestIdRouteImport } from './routes/admin.requests.consulting.$requestId'
+import { Route as AdminRequestsProcurementRequestIdRouteImport } from './routes/admin.requests.procurement.$requestId'
+import { Route as AdminRequestsTutorRequestIdRouteImport } from './routes/admin.requests.tutor.$requestId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -182,6 +190,31 @@ const AcademicServicesProductIdRoute =
     path: '/academic/services/$productId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
+  id: '/admin/orders/',
+  path: '/admin/orders/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOrdersOrderIdRoute = AdminOrdersOrderIdRouteImport.update({
+  id: '/admin/orders/$orderId',
+  path: '/admin/orders/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentsIndexRoute = AdminPaymentsIndexRouteImport.update({
+  id: '/admin/payments/',
+  path: '/admin/payments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentsPaymentIdRoute = AdminPaymentsPaymentIdRouteImport.update({
+  id: '/admin/payments/$paymentId',
+  path: '/admin/payments/$paymentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRequestsIndexRoute = AdminRequestsIndexRouteImport.update({
+  id: '/admin/requests/',
+  path: '/admin/requests/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CorporateCheckoutOrderIdRoute =
   CorporateCheckoutOrderIdRouteImport.update({
     id: '/corporate/checkout/$orderId',
@@ -313,6 +346,24 @@ const ExamTutoringNewRoute = ExamTutoringNewRouteImport.update({
   path: '/exam/tutoring/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRequestsConsultingRequestIdRoute =
+  AdminRequestsConsultingRequestIdRouteImport.update({
+    id: '/admin/requests/consulting/$requestId',
+    path: '/admin/requests/consulting/$requestId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminRequestsProcurementRequestIdRoute =
+  AdminRequestsProcurementRequestIdRouteImport.update({
+    id: '/admin/requests/procurement/$requestId',
+    path: '/admin/requests/procurement/$requestId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminRequestsTutorRequestIdRoute =
+  AdminRequestsTutorRequestIdRouteImport.update({
+    id: '/admin/requests/tutor/$requestId',
+    path: '/admin/requests/tutor/$requestId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -333,6 +384,8 @@ export interface FileRoutesByFullPath {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/corporate/checkout/$orderId': typeof CorporateCheckoutOrderIdRoute
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
@@ -349,6 +402,9 @@ export interface FileRoutesByFullPath {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/payments/': typeof AdminPaymentsIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
   '/corporate/consulting/': typeof CorporateConsultingIndexRoute
   '/corporate/notifications/': typeof CorporateNotificationsIndexRoute
   '/corporate/orders/': typeof CorporateOrdersIndexRoute
@@ -364,6 +420,9 @@ export interface FileRoutesByFullPath {
   '/exam/resources/': typeof ExamResourcesIndexRoute
   '/exam/services/': typeof ExamServicesIndexRoute
   '/exam/tutoring/': typeof ExamTutoringIndexRoute
+  '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
+  '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
+  '/admin/requests/tutor/$requestId': typeof AdminRequestsTutorRequestIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -384,6 +443,8 @@ export interface FileRoutesByTo {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/corporate/checkout/$orderId': typeof CorporateCheckoutOrderIdRoute
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
@@ -400,6 +461,9 @@ export interface FileRoutesByTo {
   '/academic/profile': typeof AcademicProfileIndexRoute
   '/academic/resources': typeof AcademicResourcesIndexRoute
   '/academic/services': typeof AcademicServicesIndexRoute
+  '/admin/orders': typeof AdminOrdersIndexRoute
+  '/admin/payments': typeof AdminPaymentsIndexRoute
+  '/admin/requests': typeof AdminRequestsIndexRoute
   '/corporate/consulting': typeof CorporateConsultingIndexRoute
   '/corporate/notifications': typeof CorporateNotificationsIndexRoute
   '/corporate/orders': typeof CorporateOrdersIndexRoute
@@ -415,6 +479,9 @@ export interface FileRoutesByTo {
   '/exam/resources': typeof ExamResourcesIndexRoute
   '/exam/services': typeof ExamServicesIndexRoute
   '/exam/tutoring': typeof ExamTutoringIndexRoute
+  '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
+  '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
+  '/admin/requests/tutor/$requestId': typeof AdminRequestsTutorRequestIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -436,6 +503,8 @@ export interface FileRoutesById {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/corporate/checkout/$orderId': typeof CorporateCheckoutOrderIdRoute
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
@@ -452,6 +521,9 @@ export interface FileRoutesById {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/payments/': typeof AdminPaymentsIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
   '/corporate/consulting/': typeof CorporateConsultingIndexRoute
   '/corporate/notifications/': typeof CorporateNotificationsIndexRoute
   '/corporate/orders/': typeof CorporateOrdersIndexRoute
@@ -467,6 +539,9 @@ export interface FileRoutesById {
   '/exam/resources/': typeof ExamResourcesIndexRoute
   '/exam/services/': typeof ExamServicesIndexRoute
   '/exam/tutoring/': typeof ExamTutoringIndexRoute
+  '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
+  '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
+  '/admin/requests/tutor/$requestId': typeof AdminRequestsTutorRequestIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -489,6 +564,8 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/admin/orders/$orderId'
+    | '/admin/payments/$paymentId'
     | '/corporate/checkout/$orderId'
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
@@ -505,6 +582,9 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/admin/orders/'
+    | '/admin/payments/'
+    | '/admin/requests/'
     | '/corporate/consulting/'
     | '/corporate/notifications/'
     | '/corporate/orders/'
@@ -520,6 +600,9 @@ export interface FileRouteTypes {
     | '/exam/resources/'
     | '/exam/services/'
     | '/exam/tutoring/'
+    | '/admin/requests/consulting/$requestId'
+    | '/admin/requests/procurement/$requestId'
+    | '/admin/requests/tutor/$requestId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -540,6 +623,8 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/admin/orders/$orderId'
+    | '/admin/payments/$paymentId'
     | '/corporate/checkout/$orderId'
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
@@ -556,6 +641,9 @@ export interface FileRouteTypes {
     | '/academic/profile'
     | '/academic/resources'
     | '/academic/services'
+    | '/admin/orders'
+    | '/admin/payments'
+    | '/admin/requests'
     | '/corporate/consulting'
     | '/corporate/notifications'
     | '/corporate/orders'
@@ -571,6 +659,9 @@ export interface FileRouteTypes {
     | '/exam/resources'
     | '/exam/services'
     | '/exam/tutoring'
+    | '/admin/requests/consulting/$requestId'
+    | '/admin/requests/procurement/$requestId'
+    | '/admin/requests/tutor/$requestId'
   id:
     | '__root__'
     | '/'
@@ -591,6 +682,8 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/admin/orders/$orderId'
+    | '/admin/payments/$paymentId'
     | '/corporate/checkout/$orderId'
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
@@ -607,6 +700,9 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/admin/orders/'
+    | '/admin/payments/'
+    | '/admin/requests/'
     | '/corporate/consulting/'
     | '/corporate/notifications/'
     | '/corporate/orders/'
@@ -622,6 +718,9 @@ export interface FileRouteTypes {
     | '/exam/resources/'
     | '/exam/services/'
     | '/exam/tutoring/'
+    | '/admin/requests/consulting/$requestId'
+    | '/admin/requests/procurement/$requestId'
+    | '/admin/requests/tutor/$requestId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -643,6 +742,8 @@ export interface RootRouteChildren {
   AcademicOrdersOrderIdRoute: typeof AcademicOrdersOrderIdRoute
   AcademicPaymentsPaymentIdRoute: typeof AcademicPaymentsPaymentIdRoute
   AcademicServicesProductIdRoute: typeof AcademicServicesProductIdRoute
+  AdminOrdersOrderIdRoute: typeof AdminOrdersOrderIdRoute
+  AdminPaymentsPaymentIdRoute: typeof AdminPaymentsPaymentIdRoute
   CorporateCheckoutOrderIdRoute: typeof CorporateCheckoutOrderIdRoute
   CorporateOrdersOrderIdRoute: typeof CorporateOrdersOrderIdRoute
   CorporatePaymentsPaymentIdRoute: typeof CorporatePaymentsPaymentIdRoute
@@ -659,6 +760,9 @@ export interface RootRouteChildren {
   AcademicProfileIndexRoute: typeof AcademicProfileIndexRoute
   AcademicResourcesIndexRoute: typeof AcademicResourcesIndexRoute
   AcademicServicesIndexRoute: typeof AcademicServicesIndexRoute
+  AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
+  AdminPaymentsIndexRoute: typeof AdminPaymentsIndexRoute
+  AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
   CorporateConsultingIndexRoute: typeof CorporateConsultingIndexRoute
   CorporateNotificationsIndexRoute: typeof CorporateNotificationsIndexRoute
   CorporateOrdersIndexRoute: typeof CorporateOrdersIndexRoute
@@ -674,6 +778,9 @@ export interface RootRouteChildren {
   ExamResourcesIndexRoute: typeof ExamResourcesIndexRoute
   ExamServicesIndexRoute: typeof ExamServicesIndexRoute
   ExamTutoringIndexRoute: typeof ExamTutoringIndexRoute
+  AdminRequestsConsultingRequestIdRoute: typeof AdminRequestsConsultingRequestIdRoute
+  AdminRequestsProcurementRequestIdRoute: typeof AdminRequestsProcurementRequestIdRoute
+  AdminRequestsTutorRequestIdRoute: typeof AdminRequestsTutorRequestIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -844,6 +951,41 @@ declare module '@tanstack/react-router' {
       path: '/academic/services/$productId'
       fullPath: '/academic/services/$productId'
       preLoaderRoute: typeof AcademicServicesProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/orders/': {
+      id: '/admin/orders/'
+      path: '/admin/orders'
+      fullPath: '/admin/orders/'
+      preLoaderRoute: typeof AdminOrdersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/orders/$orderId': {
+      id: '/admin/orders/$orderId'
+      path: '/admin/orders/$orderId'
+      fullPath: '/admin/orders/$orderId'
+      preLoaderRoute: typeof AdminOrdersOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payments/': {
+      id: '/admin/payments/'
+      path: '/admin/payments'
+      fullPath: '/admin/payments/'
+      preLoaderRoute: typeof AdminPaymentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payments/$paymentId': {
+      id: '/admin/payments/$paymentId'
+      path: '/admin/payments/$paymentId'
+      fullPath: '/admin/payments/$paymentId'
+      preLoaderRoute: typeof AdminPaymentsPaymentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/requests/': {
+      id: '/admin/requests/'
+      path: '/admin/requests'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AdminRequestsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corporate/checkout/$orderId': {
@@ -1021,6 +1163,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExamTutoringNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/requests/consulting/$requestId': {
+      id: '/admin/requests/consulting/$requestId'
+      path: '/admin/requests/consulting/$requestId'
+      fullPath: '/admin/requests/consulting/$requestId'
+      preLoaderRoute: typeof AdminRequestsConsultingRequestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/requests/procurement/$requestId': {
+      id: '/admin/requests/procurement/$requestId'
+      path: '/admin/requests/procurement/$requestId'
+      fullPath: '/admin/requests/procurement/$requestId'
+      preLoaderRoute: typeof AdminRequestsProcurementRequestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/requests/tutor/$requestId': {
+      id: '/admin/requests/tutor/$requestId'
+      path: '/admin/requests/tutor/$requestId'
+      fullPath: '/admin/requests/tutor/$requestId'
+      preLoaderRoute: typeof AdminRequestsTutorRequestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1043,6 +1206,8 @@ const rootRouteChildren: RootRouteChildren = {
   AcademicOrdersOrderIdRoute: AcademicOrdersOrderIdRoute,
   AcademicPaymentsPaymentIdRoute: AcademicPaymentsPaymentIdRoute,
   AcademicServicesProductIdRoute: AcademicServicesProductIdRoute,
+  AdminOrdersOrderIdRoute: AdminOrdersOrderIdRoute,
+  AdminPaymentsPaymentIdRoute: AdminPaymentsPaymentIdRoute,
   CorporateCheckoutOrderIdRoute: CorporateCheckoutOrderIdRoute,
   CorporateOrdersOrderIdRoute: CorporateOrdersOrderIdRoute,
   CorporatePaymentsPaymentIdRoute: CorporatePaymentsPaymentIdRoute,
@@ -1059,6 +1224,9 @@ const rootRouteChildren: RootRouteChildren = {
   AcademicProfileIndexRoute: AcademicProfileIndexRoute,
   AcademicResourcesIndexRoute: AcademicResourcesIndexRoute,
   AcademicServicesIndexRoute: AcademicServicesIndexRoute,
+  AdminOrdersIndexRoute: AdminOrdersIndexRoute,
+  AdminPaymentsIndexRoute: AdminPaymentsIndexRoute,
+  AdminRequestsIndexRoute: AdminRequestsIndexRoute,
   CorporateConsultingIndexRoute: CorporateConsultingIndexRoute,
   CorporateNotificationsIndexRoute: CorporateNotificationsIndexRoute,
   CorporateOrdersIndexRoute: CorporateOrdersIndexRoute,
@@ -1074,6 +1242,10 @@ const rootRouteChildren: RootRouteChildren = {
   ExamResourcesIndexRoute: ExamResourcesIndexRoute,
   ExamServicesIndexRoute: ExamServicesIndexRoute,
   ExamTutoringIndexRoute: ExamTutoringIndexRoute,
+  AdminRequestsConsultingRequestIdRoute: AdminRequestsConsultingRequestIdRoute,
+  AdminRequestsProcurementRequestIdRoute:
+    AdminRequestsProcurementRequestIdRoute,
+  AdminRequestsTutorRequestIdRoute: AdminRequestsTutorRequestIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

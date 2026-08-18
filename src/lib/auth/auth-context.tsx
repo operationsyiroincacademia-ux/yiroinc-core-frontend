@@ -128,10 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     fetchCurrentSession(token)
       .then((session) => {
-        if (!cancelled) apply(session);
+        if (!cancelled && getAuthToken() === token) apply(session);
       })
       .catch(() => {
-        if (!cancelled) clear();
+        if (!cancelled && getAuthToken() === token) clear();
       });
 
     return () => {
