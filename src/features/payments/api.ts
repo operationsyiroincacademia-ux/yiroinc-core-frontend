@@ -20,14 +20,21 @@ export type Payment = {
   id: string | number;
   payment_reference: string;
   order_id: string | number;
-  order_number?: string | null;
+  user_id?: string | number;
+  payment_method?: string | null;
   amount_paid: string | number;
   currency?: string | null;
   payment_status: string;
   has_pop?: string | number | null;
+  user_note?: string | null;
+  submitted_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  verified_by?: string | number | null;
   verified_at?: string | null;
+  rejected_by?: string | number | null;
+  rejected_at?: string | null;
+  rejection_reason?: string | null;
   admin_note?: string | null;
 };
 

@@ -1,41 +1,34 @@
 import { useParams } from "@tanstack/react-router";
 import { RoleLink } from "@/components/shared/RoleLink";
-import { ArrowLeft, Download, Upload, FileText, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, FileText, XCircle } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
+import { usePayment } from "@/features/payments/hooks";
+import { describeApiError } from "@/lib/api/errors";
 import {
-  findPayment,
-  PAYMENT_PROOFS,
-  PAYMENT_TIMELINE,
-} from "@/features/payments/preview-data";
+  formatDateTime,
+  formatMoney,
+  paymentBadge,
+  toFlag,
+  toNumber,
+} from "@/features/commerce/format";
+import type { Payment } from "@/features/payments/api";
 
 /**
- * Data sources once the API layer is wired:
- *   GET  /payments/{id}       — payment record and verification status
- *   GET  /orders/{id}         — related order reference
- *   GET  /files               — proof file where related_type = payment,
- *                               related_id = this payment ID
- *   POST /files               — upload/replace proof: the payment record is
- *                               created FIRST, then the file is uploaded with
- *                               related_type = payment, related_id = payment ID,
- *                               file_type = proof_of_payment
- *   GET  /timeline            — payment activity / status updates
- *   GET  /files/{id}/download — authenticated download
- * No values are hardcoded in this component; verification is admin-only and
- * is therefore read-only here.
+ * Data source: GET /payments/{id}. The endpoint returns the payment table
+ * record only; proof file metadata/download URLs and resubmission workflows are
+ * not exposed by the documented user-facing payment contract.
  */
 
 function Panel({
   title,
   description,
-  action,
   children,
 }: {
   title: string;
   description?: string;
-  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -43,11 +36,8 @@ function Panel({
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-sm font-bold tracking-tight text-foreground">{title}</h2>
-          {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
         </div>
-        {action}
       </header>
       {children}
     </section>
@@ -67,9 +57,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function PaymentDetailsPage() {
   const { paymentId } = useParams({ strict: false }) as { paymentId: string };
-  const payment = findPayment(Number(paymentId));
+  const { data: payment, isLoading, isError, error } = usePayment(paymentId);
 
-  if (!payment) {
+  if (isLoading) {
+    return (
+      <AppShell>
+        <PageHeader title="Loading payment…" />
+        <section className="border border-border bg-card px-6 py-16 text-center">
+          <p className="text-sm text-muted-foreground">Loading this payment…</p>
+        </section>
+      </AppShell>
+    );
+  }
+
+  if (isError || !payment) {
     return (
       <AppShell>
         <PageHeader
@@ -77,8 +78,8 @@ export function PaymentDetailsPage() {
           description="This payment does not exist or is not available on your account."
         />
         <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            The payment you are looking for could not be loaded.
+          <p className="mx-auto max-w-md text-sm text-muted-foreground">
+            {describeApiError(error, "The payment you are looking for could not be loaded.")}
           </p>
           <Button asChild variant="outline" className="mt-5">
             <RoleLink to="/payments">Back to payments</RoleLink>
@@ -88,8 +89,9 @@ export function PaymentDetailsPage() {
     );
   }
 
-  const proof = PAYMENT_PROOFS[payment.id] ?? null;
-  const timeline = PAYMENT_TIMELINE[payment.id] ?? [];
+  const hasProof = toFlag(payment.has_pop);
+  const badge = paymentBadge(payment.payment_status, hasProof);
+  const events = paymentEvents(payment);
 
   return (
     <AppShell>
@@ -102,34 +104,15 @@ export function PaymentDetailsPage() {
       </RoleLink>
 
       <PageHeader
-        title={payment.reference}
-        description={`Payment for ${payment.orderReference}`}
-        actions={<StatusBadge label={payment.status} tone={payment.tone} />}
+        title={payment.payment_reference}
+        description={`Payment for order #${payment.order_id}`}
+        actions={<StatusBadge label={badge.label} tone={badge.tone} />}
       />
 
-      {!proof && (
-        <section className="mb-6 bg-accent-soft/70 p-5">
-          <h2 className="text-sm font-bold tracking-tight text-foreground">
-            Next action
-          </h2>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 bg-card px-4 py-3">
-            <div className="flex min-w-0 items-start gap-3">
-              <Upload className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={1.9} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  Upload proof of payment
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  This payment record is created. Attach your receipt so it can be
-                  verified.
-                </p>
-              </div>
-            </div>
-            <Button size="sm">
-              <Upload className="h-4 w-4" strokeWidth={2} />
-              Upload proof
-            </Button>
-          </div>
+      {payment.payment_status === "rejected" && payment.rejection_reason && (
+        <section className="mb-6 bg-danger-soft px-5 py-4">
+          <p className="text-sm font-semibold text-foreground">Payment rejected</p>
+          <p className="mt-1 text-sm text-danger">{payment.rejection_reason}</p>
         </section>
       )}
 
@@ -137,90 +120,83 @@ export function PaymentDetailsPage() {
         <div className="space-y-6 lg:col-span-2">
           <Panel title="Payment summary">
             <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
-              <Field label="Payment reference">{payment.reference}</Field>
+              <Field label="Payment reference">{payment.payment_reference}</Field>
               <Field label="Related order">
                 <RoleLink
                   to="/orders/$orderId"
-                  params={{ orderId: String(payment.orderId) }}
+                  params={{ orderId: String(payment.order_id) }}
                   className="font-semibold text-primary hover:underline"
                 >
-                  {payment.orderReference}
+                  #{payment.order_id}
                 </RoleLink>
               </Field>
-              <Field label="Amount paid">{payment.amountPaid}</Field>
-              <Field label="Date submitted">{payment.submittedAt}</Field>
+              <Field label="Amount paid">
+                {formatPaymentAmount(payment.amount_paid, payment.currency)}
+              </Field>
+              <Field label="Payment method">{humanisePaymentMethod(payment.payment_method)}</Field>
+              <Field label="Date created">{formatDateTime(payment.created_at)}</Field>
+              <Field label="Date submitted">{formatDateTime(payment.submitted_at)}</Field>
               <Field label="Verification status">
-                <StatusBadge label={payment.status} tone={payment.tone} />
+                <StatusBadge label={badge.label} tone={badge.tone} />
               </Field>
-              <Field label="Proof of payment">
-                {proof ? "Uploaded" : "Not uploaded"}
-              </Field>
+              <Field label="Proof of payment">{hasProof ? "Uploaded" : "Not uploaded"}</Field>
             </dl>
           </Panel>
 
           <Panel
             title="Proof of payment"
-            description="The receipt attached to this payment record."
-            action={
-              proof ? (
-                <Button variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4" strokeWidth={2} />
-                  Replace proof
-                </Button>
-              ) : undefined
-            }
+            description="Proof availability is recorded on the payment."
           >
-            {!proof ? (
-              <div className="px-5 py-10 text-center">
-                <p className="text-sm font-semibold text-foreground">
-                  No proof uploaded yet
-                </p>
-                <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground">
-                  Upload a bank receipt or transfer screenshot so the finance team can
-                  verify this payment.
-                </p>
-                <Button size="sm" className="mt-5">
-                  <Upload className="h-4 w-4" strokeWidth={2} />
-                  Upload proof
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <FileText
-                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                    strokeWidth={1.9}
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {proof.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {proof.fileType} · {proof.size} · Uploaded {proof.uploadedAt}
-                    </p>
-                  </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <FileText
+                  className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                  strokeWidth={1.9}
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    {hasProof ? "Proof uploaded" : "No proof uploaded yet"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {hasProof
+                      ? submittedLabel(payment)
+                      : "The payment record does not currently indicate an uploaded proof."}
+                  </p>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4" strokeWidth={2} />
-                  Download
-                </Button>
               </div>
-            )}
+            </div>
           </Panel>
+
+          {(payment.verified_at || payment.rejected_at || payment.rejection_reason) && (
+            <Panel title="Verification">
+              <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
+                <Field label="Verified by">
+                  {payment.verified_by ? `#${payment.verified_by}` : "—"}
+                </Field>
+                <Field label="Verified at">{formatDateTime(payment.verified_at)}</Field>
+                <Field label="Rejected by">
+                  {payment.rejected_by ? `#${payment.rejected_by}` : "—"}
+                </Field>
+                <Field label="Rejected at">{formatDateTime(payment.rejected_at)}</Field>
+                {payment.rejection_reason && (
+                  <div className="sm:col-span-2">
+                    <Field label="Rejection reason">{payment.rejection_reason}</Field>
+                  </div>
+                )}
+              </dl>
+            </Panel>
+          )}
         </div>
 
-        <Panel
-          title="Payment activity"
-          description="Recorded updates on this payment."
-        >
-          {timeline.length === 0 ? (
+        <Panel title="Payment activity" description="Recorded payment timestamps.">
+          {events.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-muted-foreground">
               No activity recorded yet.
             </p>
           ) : (
             <ol className="px-5 py-5">
-              {timeline.map((event, index) => (
-                <li key={event.id} className="flex gap-3.5">
+              {events.map((event, index) => (
+                <li key={event.label} className="flex gap-3.5">
                   <div className="flex flex-col items-center">
                     <span
                       className={
@@ -229,19 +205,13 @@ export function PaymentDetailsPage() {
                           : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border"
                       }
                     />
-                    {index < timeline.length - 1 && (
-                      <span className="my-1 w-px flex-1 bg-border" />
-                    )}
+                    {index < events.length - 1 && <span className="my-1 w-px flex-1 bg-border" />}
                   </div>
-                  <div className={index < timeline.length - 1 ? "pb-6" : ""}>
-                    <p className="text-sm font-semibold text-foreground">
+                  <div className={index < events.length - 1 ? "pb-6" : ""}>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <event.icon className="h-3.5 w-3.5" strokeWidth={2} />
                       {event.label}
                     </p>
-                    {event.detail && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {event.detail}
-                      </p>
-                    )}
                     <p className="mt-0.5 text-xs text-muted-foreground">{event.at}</p>
                   </div>
                 </li>
@@ -252,4 +222,53 @@ export function PaymentDetailsPage() {
       </div>
     </AppShell>
   );
+}
+
+function humanisePaymentMethod(value: string | null | undefined): string {
+  if (!value) return "—";
+  return value.replace(/_/g, " ").replace(/^./, (char) => char.toUpperCase());
+}
+
+function formatPaymentAmount(amount: string | number, currency: string | null | undefined) {
+  const value = toNumber(amount);
+  return currency ? formatMoney(value, currency) : value.toLocaleString();
+}
+
+function submittedLabel(payment: Payment): string {
+  return payment.submitted_at
+    ? `Submitted ${formatDateTime(payment.submitted_at)}`
+    : "Proof upload is recorded, but no submitted timestamp was returned.";
+}
+
+function paymentEvents(payment: Payment) {
+  const events = [];
+  if (payment.rejected_at) {
+    events.push({
+      label: "Payment rejected",
+      at: formatDateTime(payment.rejected_at),
+      icon: XCircle,
+    });
+  }
+  if (payment.verified_at) {
+    events.push({
+      label: "Payment verified",
+      at: formatDateTime(payment.verified_at),
+      icon: CheckCircle2,
+    });
+  }
+  if (payment.submitted_at) {
+    events.push({
+      label: "Proof submitted",
+      at: formatDateTime(payment.submitted_at),
+      icon: FileText,
+    });
+  }
+  if (payment.created_at) {
+    events.push({
+      label: "Payment created",
+      at: formatDateTime(payment.created_at),
+      icon: Clock,
+    });
+  }
+  return events;
 }

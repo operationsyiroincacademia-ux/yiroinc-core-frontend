@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { RoleLink } from "@/components/shared/RoleLink";
-import { Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePayments } from "@/features/payments/hooks";
 import { describeApiError } from "@/lib/api/errors";
-import { formatDate, formatMoney, paymentBadge, toFlag, toNumber } from "@/features/commerce/format";
+import {
+  formatDate,
+  formatMoney,
+  paymentBadge,
+  toFlag,
+  toNumber,
+} from "@/features/commerce/format";
 
 /** Rows come from GET /payments for the authenticated user. */
 const FILTERS = [
@@ -23,27 +29,24 @@ export function PaymentsListPage() {
   const [query, setQuery] = useState("");
   const { data, isLoading, isError, error } = usePayments(1, 50);
 
-  const payments = data?.payments ?? [];
+  const payments = data?.payments;
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return payments.filter((payment) => {
+    return (payments ?? []).filter((payment) => {
       const matchesStatus = filter === "all" || payment.payment_status === filter;
       const matchesQuery =
         q.length === 0 ||
         (payment.payment_reference ?? "").toLowerCase().includes(q) ||
-        (payment.order_number ?? "").toLowerCase().includes(q);
+        String(payment.order_id).toLowerCase().includes(q);
       return matchesStatus && matchesQuery;
     });
   }, [payments, filter, query]);
 
-  const hasPayments = payments.length > 0;
+  const hasPayments = (payments?.length ?? 0) > 0;
 
   return (
     <AppShell>
-      <PageHeader
-        title="Payments"
-        description="Payment records submitted against your orders."
-      />
+      <PageHeader title="Payments" description="Payment records submitted against your orders." />
 
       {hasPayments && (
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -90,9 +93,7 @@ export function PaymentsListPage() {
           </p>
         ) : isError ? (
           <div className="px-6 py-16 text-center">
-            <p className="text-sm font-semibold text-foreground">
-              Payments could not be loaded
-            </p>
+            <p className="text-sm font-semibold text-foreground">Payments could not be loaded</p>
             <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
               {describeApiError(error, "Please try again in a moment.")}
             </p>
@@ -119,15 +120,17 @@ export function PaymentsListPage() {
             <table className="hidden w-full text-left md:table">
               <thead>
                 <tr className="border-b border-border">
-                  {["Reference", "Order", "Amount", "Submitted", "Status"].map((heading) => (
-                    <th
-                      key={heading}
-                      scope="col"
-                      className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
-                    >
-                      {heading}
-                    </th>
-                  ))}
+                  {["Reference", "Order", "Amount", "Submitted", "Status", ""].map(
+                    (heading, index) => (
+                      <th
+                        key={heading || `action-${index}`}
+                        scope="col"
+                        className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
+                      >
+                        {heading}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -150,17 +153,28 @@ export function PaymentsListPage() {
                           params={{ orderId: String(payment.order_id) }}
                           className="hover:text-primary hover:underline"
                         >
-                          {payment.order_number ?? `#${payment.order_id}`}
+                          #{payment.order_id}
                         </RoleLink>
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-foreground">
-                        {formatMoney(toNumber(payment.amount_paid), payment.currency ?? "NGN")}
+                        {formatPaymentAmount(payment.amount_paid, payment.currency)}
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
                         {formatDate(payment.created_at)}
                       </td>
                       <td className="px-5 py-4">
                         <StatusBadge label={badge.label} tone={badge.tone} />
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-right">
+                        <Button asChild variant="outline" size="sm">
+                          <RoleLink
+                            to="/payments/$paymentId"
+                            params={{ paymentId: String(payment.id) }}
+                          >
+                            View details
+                            <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                          </RoleLink>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -173,18 +187,11 @@ export function PaymentsListPage() {
                 const badge = paymentBadge(payment.payment_status, toFlag(payment.has_pop));
                 return (
                   <li key={String(payment.id)}>
-                    <RoleLink
-                      to="/payments/$paymentId"
-                      params={{ paymentId: String(payment.id) }}
-                      className="block px-5 py-4"
-                    >
+                    <div className="px-5 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">
-                            {formatMoney(
-                              toNumber(payment.amount_paid),
-                              payment.currency ?? "NGN",
-                            )}
+                            {formatPaymentAmount(payment.amount_paid, payment.currency)}
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             {payment.payment_reference} · {formatDate(payment.created_at)}
@@ -192,7 +199,16 @@ export function PaymentsListPage() {
                         </div>
                         <StatusBadge label={badge.label} tone={badge.tone} />
                       </div>
-                    </RoleLink>
+                      <Button asChild variant="outline" size="sm" className="mt-3 w-full">
+                        <RoleLink
+                          to="/payments/$paymentId"
+                          params={{ paymentId: String(payment.id) }}
+                        >
+                          View details
+                          <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                        </RoleLink>
+                      </Button>
+                    </div>
                   </li>
                 );
               })}
@@ -202,4 +218,9 @@ export function PaymentsListPage() {
       </section>
     </AppShell>
   );
+}
+
+function formatPaymentAmount(amount: string | number, currency: string | null | undefined) {
+  const value = toNumber(amount);
+  return currency ? formatMoney(value, currency) : value.toLocaleString();
 }
