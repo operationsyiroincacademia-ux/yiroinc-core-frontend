@@ -5,7 +5,6 @@ import { AuthLayout, Field, inputClass } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { describeApiError } from "@/features/commerce/api";
 import { useAuth } from "@/lib/auth/auth-context";
-import { PROFILE_TYPE_TO_EXPERIENCE } from "@/lib/roles";
 import { EXPERIENCE_BASE } from "@/lib/roles/experience-context";
 
 export function LoginPage() {
@@ -29,9 +28,8 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const profile = await signIn({ email, password });
-      const target = PROFILE_TYPE_TO_EXPERIENCE[profile.profile_type] ?? "academic";
-      navigate({ to: EXPERIENCE_BASE[target], replace: true });
+      const session = await signIn({ email, password });
+      navigate({ to: EXPERIENCE_BASE[session.experience], replace: true });
     } catch (err) {
       setError(describeApiError(err, "Sign in failed. Check your details and try again."));
     } finally {
@@ -77,9 +75,7 @@ export function LoginPage() {
           />
         </Field>
 
-        {error && (
-          <p className="bg-danger-soft px-3 py-2.5 text-xs text-danger">{error}</p>
-        )}
+        {error && <p className="bg-danger-soft px-3 py-2.5 text-xs text-danger">{error}</p>}
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Signing in…" : "Sign in"}

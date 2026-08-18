@@ -15,12 +15,11 @@ export type CurrentUser = {
 
 /**
  * The authenticated user, sourced from POST /auth/login, POST /auth/register
- * and GET /auth/me. `profile_type` is the source of truth for the experience;
- * when it is unavailable the active route's experience context is used so the
- * shell never falls back to a hardcoded "Academic" identity.
+ * and GET /auth/me. Admin identity comes from auth/user flags. User-facing
+ * experience remains profile-based until the admin route ecosystem exists.
  */
 export function useCurrentUser(): CurrentUser {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const routeExperience = useExperience();
   const profileType = profile?.profile_type ?? null;
 
@@ -29,7 +28,7 @@ export function useCurrentUser(): CurrentUser {
     displayName: user?.name ?? "",
     email: user?.email ?? "",
     profileType,
-    isAdmin: false,
+    isAdmin,
     experience: resolveExperience(profileType, false, routeExperience),
     unreadNotifications: 0,
   };

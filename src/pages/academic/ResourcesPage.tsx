@@ -10,6 +10,7 @@ import { downloadResourceFile, type Resource } from "@/features/resources/api";
 import { usePurchasedResources, useResources } from "@/features/resources/hooks";
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { roleHref, useExperience } from "@/lib/roles/experience-context";
+import { ApiError } from "@/lib/api/client";
 import { describeApiError } from "@/lib/api/errors";
 import {
   formatDate,
@@ -130,6 +131,13 @@ export function ResourcesPage() {
           });
         },
         onError: (err) => {
+          const existingOrderId = existingResourceOrderId(err);
+          if (existingOrderId !== null) {
+            navigate({
+              to: roleHref(experience, `/checkout/${existingOrderId}`),
+            });
+            return;
+          }
           setDownloadError(describeApiError(err, "This resource order could not be created."));
         },
         onSettled: () => {
@@ -374,4 +382,22 @@ function sizeOf(resource: Resource): string | null {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function existingResourceOrderId(error: unknown): number | null {
+  if (!(error instanceof ApiError) || error.status !== 409) return null;
+  if (!error.data || typeof error.data !== "object") return null;
+
+  const payload = error.data as {
+    message?: unknown;
+    data?: { order_id?: unknown };
+  };
+  if (payload.message !== "You already have an active order for this resource.") {
+    return null;
+  }
+
+  const rawOrderId = payload.data?.order_id;
+  const orderId =
+    typeof rawOrderId === "string" || typeof rawOrderId === "number" ? toNumber(rawOrderId) : 0;
+  return orderId > 0 ? orderId : null;
 }

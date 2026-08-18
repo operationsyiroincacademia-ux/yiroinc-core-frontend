@@ -4,6 +4,8 @@
  * value returned by the API.
  */
 
+import type { StatusTone } from "@/components/ui/status-badge";
+
 export function formatMoney(amount: number, currency: string) {
   try {
     return new Intl.NumberFormat("en-NG", {
@@ -16,13 +18,13 @@ export function formatMoney(amount: number, currency: string) {
   }
 }
 
-type Tone = "info" | "success" | "warning" | "neutral";
-
 export function paymentStatusLabel(
   status: string,
   hasProof: boolean,
-): { label: string; tone: Tone } {
+): { label: string; tone: StatusTone } {
   if (status === "verified") return { label: "Verified", tone: "success" };
+  if (status === "rejected") return { label: "Rejected", tone: "danger" };
+  if (status === "submitted") return { label: "Submitted", tone: "info" };
   if (status === "pending") {
     return hasProof
       ? { label: "Awaiting verification", tone: "info" }
@@ -31,14 +33,16 @@ export function paymentStatusLabel(
   return { label: status, tone: "neutral" };
 }
 
-const ORDER_STATUS_LABELS: Record<string, { label: string; tone: Tone }> = {
+const ORDER_STATUS_LABELS: Record<string, { label: string; tone: StatusTone }> = {
   awaiting_payment: { label: "Awaiting payment", tone: "warning" },
   under_review: { label: "Under review", tone: "info" },
-  in_progress: { label: "In progress", tone: "info" },
+  processing: { label: "Processing", tone: "info" },
   completed: { label: "Completed", tone: "success" },
+  cancelled: { label: "Cancelled", tone: "neutral" },
+  in_progress: { label: "In progress", tone: "info" },
 };
 
-export function orderStatusLabel(status: string): { label: string; tone: Tone } {
+export function orderStatusLabel(status: string): { label: string; tone: StatusTone } {
   return ORDER_STATUS_LABELS[status] ?? { label: status, tone: "neutral" };
 }
 
@@ -64,6 +68,8 @@ export function toNumber(value: string | number | null | undefined): number {
 /** Verified fulfilment statuses. */
 const FULFILLMENT_LABELS: Record<string, string> = {
   not_started: "Not started",
+  processing: "Processing",
+  ready: "Ready",
   dispatched: "Dispatched",
   fulfilled: "Fulfilled",
 };
@@ -71,8 +77,7 @@ const FULFILLMENT_LABELS: Record<string, string> = {
 export function humaniseStatus(status: string): string {
   if (!status) return "—";
   return (
-    FULFILLMENT_LABELS[status] ??
-    status.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())
+    FULFILLMENT_LABELS[status] ?? status.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())
   );
 }
 
@@ -80,10 +85,11 @@ export function humaniseStatus(status: string): string {
 export function paymentBadge(
   status: string | null | undefined,
   hasProof: boolean,
-): { label: string; tone: Tone | "danger" } {
+): { label: string; tone: StatusTone } {
   const value = String(status ?? "");
   if (value === "verified") return { label: "Verified", tone: "success" };
   if (value === "rejected") return { label: "Rejected", tone: "danger" };
+  if (value === "submitted") return { label: "Submitted", tone: "info" };
   if (value === "pending") {
     return hasProof
       ? { label: "Awaiting verification", tone: "info" }

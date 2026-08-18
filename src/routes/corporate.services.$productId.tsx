@@ -3,9 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ProductDetailsPage } from "@/pages/commerce/ProductDetailsPage";
 import { withExperience } from "@/pages/role-page";
 
-const TITLE = "Service Details | YiroInc Academia Portal";
+const TITLE = "Product Details | YiroInc Academia Portal";
 const DESC =
-  "Review a service's description, price and delivery details before placing an order.";
+  "Review a Yiroinc Store product's description, price and details before placing an order.";
 
 export const Route = createFileRoute("/corporate/services/$productId")({
   head: () => ({

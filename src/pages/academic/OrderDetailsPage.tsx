@@ -42,9 +42,7 @@ function Panel({
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-sm font-bold tracking-tight text-foreground">{title}</h2>
-          {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
         </div>
         {action}
       </header>
@@ -110,8 +108,8 @@ export function OrderDetailsPage() {
   );
   const awaitingProof =
     Boolean(order.payment_id) &&
-    !orderHasProof &&
-    (order.related_payment_status ?? order.payment_status) === "pending";
+    (!orderHasProof || (order.related_payment_status ?? order.payment_status) === "rejected") &&
+    ["pending", "rejected"].includes(order.related_payment_status ?? order.payment_status);
 
   return (
     <AppShell>
@@ -131,19 +129,14 @@ export function OrderDetailsPage() {
 
       {awaitingProof && (
         <section className="mb-6 bg-accent-soft/70 p-5">
-          <h2 className="text-sm font-bold tracking-tight text-foreground">
-            Next action
-          </h2>
+          <h2 className="text-sm font-bold tracking-tight text-foreground">Next action</h2>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 bg-card px-4 py-3">
             <div className="flex min-w-0 items-start gap-3">
               <Upload className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={1.9} />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  Upload proof of payment
-                </p>
+                <p className="text-sm font-semibold text-foreground">Upload proof of payment</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {formatMoney(toNumber(order.total_price), currency)} is awaiting your
-                  receipt.
+                  {formatMoney(toNumber(order.total_price), currency)} is awaiting your receipt.
                 </p>
               </div>
             </div>
@@ -161,29 +154,17 @@ export function OrderDetailsPage() {
           <Panel title="Order summary">
             <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
               <Field label="Service" value={order.product_name_snapshot} />
-              <Field
-                label="Amount"
-                value={formatMoney(toNumber(order.total_price), currency)}
-              />
+              <Field label="Amount" value={formatMoney(toNumber(order.total_price), currency)} />
               <Field label="Quantity" value={String(toNumber(order.quantity))} />
-              <Field
-                label="Unit price"
-                value={formatMoney(toNumber(order.unit_price), currency)}
-              />
+              <Field label="Unit price" value={formatMoney(toNumber(order.unit_price), currency)} />
               <Field label="SKU" value={order.sku_snapshot ?? "—"} />
               <Field label="Date placed" value={formatDate(order.created_at)} />
               <Field label="Last updated" value={formatDate(order.updated_at)} />
-              <Field
-                label="Fulfilment"
-                value={humaniseStatus(order.fulfillment_status)}
-              />
+              <Field label="Fulfilment" value={humaniseStatus(order.fulfillment_status)} />
               <Field
                 label="Payment"
                 value={
-                  <StatusBadge
-                    label={orderPaymentBadge.label}
-                    tone={orderPaymentBadge.tone}
-                  />
+                  <StatusBadge label={orderPaymentBadge.label} tone={orderPaymentBadge.tone} />
                 }
               />
             </dl>
@@ -230,10 +211,7 @@ export function OrderDetailsPage() {
                   No payment has been recorded for this order yet.
                 </p>
                 <Button asChild variant="outline" size="sm" className="mt-4">
-                  <RoleLink
-                    to="/checkout/$orderId"
-                    params={{ orderId: String(order.id) }}
-                  >
+                  <RoleLink to="/checkout/$orderId" params={{ orderId: String(order.id) }}>
                     <CreditCard className="h-4 w-4" strokeWidth={2} />
                     Submit payment
                   </RoleLink>
@@ -251,14 +229,10 @@ export function OrderDetailsPage() {
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">
-                          {formatMoney(
-                            toNumber(payment.amount_paid),
-                            payment.currency ?? currency,
-                          )}
+                          {formatMoney(toNumber(payment.amount_paid), payment.currency ?? currency)}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {payment.payment_reference} · Submitted{" "}
-                          {formatDate(payment.created_at)}
+                          {payment.payment_reference} · Submitted {formatDate(payment.created_at)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -282,20 +256,15 @@ export function OrderDetailsPage() {
 
         <Panel title="Status" description="Current state recorded on this order.">
           <dl className="space-y-5 px-5 py-5">
-            <Field label="Order status" value={<StatusBadge label={status.label} tone={status.tone} />} />
+            <Field
+              label="Order status"
+              value={<StatusBadge label={status.label} tone={status.tone} />}
+            />
             <Field
               label="Payment status"
-              value={
-                <StatusBadge
-                  label={orderPaymentBadge.label}
-                  tone={orderPaymentBadge.tone}
-                />
-              }
+              value={<StatusBadge label={orderPaymentBadge.label} tone={orderPaymentBadge.tone} />}
             />
-            <Field
-              label="Fulfilment status"
-              value={humaniseStatus(order.fulfillment_status)}
-            />
+            <Field label="Fulfilment status" value={humaniseStatus(order.fulfillment_status)} />
           </dl>
         </Panel>
       </div>

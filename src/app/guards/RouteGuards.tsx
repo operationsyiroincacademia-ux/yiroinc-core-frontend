@@ -30,5 +30,7 @@ export function RequireExperience({
 }
 
 export function RequireAdmin({ children }: { children: ReactNode }) {
-  return <RequireExperience allow={["admin"]}>{children}</RequireExperience>;
+  const user = useCurrentUser();
+  if (!user.isAdmin) return null;
+  return <>{children}</>;
 }

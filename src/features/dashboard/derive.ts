@@ -11,7 +11,7 @@ export function countPendingPayments(orders: Order[]) {
   return orders.filter((order) => {
     const status = order.related_payment_status ?? order.payment_status;
     if (status === "rejected") return false;
-    if (order.payment_id) return status === "pending";
+    if (order.payment_id) return status === "pending" || status === "submitted";
     return (
       order.payment_status === "pending" && !["completed", "cancelled"].includes(order.order_status)
     );
@@ -25,10 +25,10 @@ export function countUnreadNotifications(notifications: Notification[]) {
 export function findOrderNeedingProof(orders: Order[]) {
   return orders.find((order) => {
     if (["completed", "cancelled"].includes(order.order_status)) return false;
-    if ((order.related_payment_status ?? null) === "rejected") return false;
-    if (toFlag(order.has_pop)) return false;
+    const status = order.related_payment_status ?? order.payment_status;
+    if (status !== "rejected" && toFlag(order.has_pop)) return false;
     if (!order.payment_id) return true;
-    return (order.related_payment_status ?? order.payment_status) === "pending";
+    return status === "pending" || status === "rejected";
   });
 }
 

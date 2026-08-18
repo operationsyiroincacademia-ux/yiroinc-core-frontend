@@ -2,8 +2,8 @@
  * Verified authentication endpoints on the YiroInc Academia API.
  *
  * Registration, login and session restoration all return the same shape:
- * { token?, user, profile }. `profile.profile_type` is the single source of
- * truth for role routing — it is never renamed or transformed.
+ * { token?, user, profile, auth? }. Admin identity comes from auth/user
+ * capability fields, never from profile.profile_type.
  */
 
 import { apiRequest } from "@/lib/api/client";
@@ -15,6 +15,9 @@ export type AuthUser = {
   id: number;
   name: string;
   email: string;
+  is_admin?: string | number | boolean | null;
+  roles?: string[];
+  capabilities?: Record<string, string | number | boolean | null | undefined>;
   registered_at?: string;
 };
 
@@ -24,10 +27,16 @@ export type AuthProfile = {
   completed?: boolean;
 };
 
+export type AuthMeta = {
+  is_admin?: string | number | boolean | null;
+  capabilities?: Record<string, string | number | boolean | null | undefined>;
+};
+
 export type AuthSession = {
   token: string;
   user: AuthUser;
   profile: AuthProfile;
+  auth?: AuthMeta | null;
 };
 
 export type RegisterInput = {
@@ -60,11 +69,10 @@ export async function loginWithPassword(input: {
 /** GET /auth/me — restores the session from a stored JWT. */
 export async function fetchCurrentSession(
   token: string,
-): Promise<{ user: AuthUser; profile: AuthProfile }> {
-  const res = await apiRequest<ApiEnvelope<{ user: AuthUser; profile: AuthProfile }>>(
-    "/auth/me",
-    { token },
-  );
+): Promise<{ user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null }> {
+  const res = await apiRequest<
+    ApiEnvelope<{ user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null }>
+  >("/auth/me", { token });
   return res.data;
 }
 

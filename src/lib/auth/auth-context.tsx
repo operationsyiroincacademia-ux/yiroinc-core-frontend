@@ -13,6 +13,7 @@ import {
   loginWithPassword,
   registerAccount,
   logoutSession,
+  type AuthMeta,
   type AuthProfile,
   type AuthUser,
   type RegisterInput,
@@ -33,25 +34,31 @@ type AuthState = {
   status: AuthStatus;
   user: AuthUser | null;
   profile: AuthProfile | null;
+  auth: AuthMeta | null;
+  isAdmin: boolean;
   experience: Experience | null;
-  signIn: (input: { email: string; password: string }) => Promise<AuthProfile>;
+  signIn: (input: { email: string; password: string }) => Promise<{
+    profile: AuthProfile;
+    experience: Experience;
+  }>;
   signUp: (input: RegisterInput) => Promise<AuthProfile>;
   signOut: () => Promise<void>;
 };
 
 const CACHE_KEY = "yac_session";
+type CachedSession = { user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null };
 
-function readCache(): { user: AuthUser; profile: AuthProfile } | null {
+function readCache(): CachedSession | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(CACHE_KEY);
-    return raw ? (JSON.parse(raw) as { user: AuthUser; profile: AuthProfile }) : null;
+    return raw ? (JSON.parse(raw) as CachedSession) : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(value: { user: AuthUser; profile: AuthProfile } | null) {
+function writeCache(value: CachedSession | null) {
   if (typeof window === "undefined") return;
   try {
     if (value) window.localStorage.setItem(CACHE_KEY, JSON.stringify(value));
@@ -63,14 +70,27 @@ function writeCache(value: { user: AuthUser; profile: AuthProfile } | null) {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+function toFlag(value: string | number | boolean | null | undefined): boolean {
+  if (typeof value === "boolean") return value;
+  if (value === null || value === undefined) return false;
+  const raw = String(value).toLowerCase();
+  return raw === "1" || raw === "true";
+}
+
+function sessionIsAdmin(session: Pick<CachedSession, "user" | "auth">): boolean {
+  return toFlag(session.auth?.is_admin) || toFlag(session.user.is_admin);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [auth, setAuth] = useState<AuthMeta | null>(null);
 
-  const apply = useCallback((session: { user: AuthUser; profile: AuthProfile }) => {
+  const apply = useCallback((session: CachedSession) => {
     setUser(session.user);
     setProfile(session.profile);
+    setAuth(session.auth ?? null);
     writeCache(session);
     setStatus("authenticated");
   }, []);
@@ -80,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     writeCache(null);
     setUser(null);
     setProfile(null);
+    setAuth(null);
     setStatus("unauthenticated");
   }, []);
 
@@ -117,8 +138,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (input: { email: string; password: string }) => {
       const session = await loginWithPassword(input);
       setAuthToken(session.token);
-      apply({ user: session.user, profile: session.profile });
-      return session.profile;
+      apply({ user: session.user, profile: session.profile, auth: session.auth ?? null });
+      return {
+        profile: session.profile,
+        experience: resolveExperience(session.profile.profile_type, false),
+      };
     },
     [apply],
   );
@@ -127,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (input: RegisterInput) => {
       const session = await registerAccount(input);
       setAuthToken(session.token);
-      apply({ user: session.user, profile: session.profile });
+      apply({ user: session.user, profile: session.profile, auth: session.auth ?? null });
       return session.profile;
     },
     [apply],
@@ -146,17 +170,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
   }, [clear]);
 
+  const isAdmin = user ? sessionIsAdmin({ user, auth }) : false;
+
   const value = useMemo<AuthState>(
     () => ({
       status,
       user,
       profile,
+      auth,
+      isAdmin,
       experience: profile ? resolveExperience(profile.profile_type, false) : null,
       signIn,
       signUp,
       signOut,
     }),
-    [status, user, profile, signIn, signUp, signOut],
+    [status, user, profile, auth, isAdmin, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
