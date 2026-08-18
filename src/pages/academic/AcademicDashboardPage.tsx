@@ -72,7 +72,7 @@ export function AcademicDashboardPage() {
         actions={
           <Button asChild>
             <RoleLink to="/services">
-              Browse Services
+              Browse Yiroinc Store
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </RoleLink>
           </Button>

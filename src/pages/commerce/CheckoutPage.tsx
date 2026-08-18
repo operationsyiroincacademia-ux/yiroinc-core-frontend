@@ -1,14 +1,6 @@
 import { useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  Building2,
-  CheckCircle2,
-  Copy,
-  FileText,
-  Info,
-  Upload,
-} from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, Copy, FileText, Info, Upload } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { RoleLink } from "@/components/shared/RoleLink";
@@ -52,24 +44,14 @@ function Panel({
     <section className="border border-border bg-card">
       <header className="border-b border-border px-5 py-4">
         <h2 className="text-sm font-bold tracking-tight text-foreground">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
       </header>
       {children}
     </section>
   );
 }
 
-function Row({
-  label,
-  value,
-  copyable,
-}: {
-  label: string;
-  value: string;
-  copyable?: boolean;
-}) {
+function Row({ label, value, copyable }: { label: string; value: string; copyable?: boolean }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5">
       <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
@@ -123,18 +105,14 @@ export function CheckoutPage() {
       <AppShell>
         <PageHeader
           title="Checkout unavailable"
-          description={describeApiError(
-            orderQuery.error,
-            "This order could not be loaded.",
-          )}
+          description={describeApiError(orderQuery.error, "This order could not be loaded.")}
         />
         <section className="border border-border bg-card px-6 py-16 text-center">
           <p className="mb-5 text-sm text-muted-foreground">
-            Open the order from your orders list, or place the order again from the
-            services catalogue.
+            Open the order from your orders list, or place the order again from the store.
           </p>
           <Button asChild variant="outline">
-            <RoleLink to="/services">Back to services</RoleLink>
+            <RoleLink to="/services">Back to Yiroinc Store</RoleLink>
           </Button>
         </section>
       </AppShell>
@@ -142,6 +120,9 @@ export function CheckoutPage() {
   }
 
   const order = orderQuery.data;
+  const isResourceOrder = order.order_source === "resource";
+  const backTarget = isResourceOrder ? "/resources" : "/services";
+  const backLabel = isResourceOrder ? "Back to resources" : "Back to Yiroinc Store";
   const numericOrderId = toNumber(order.id);
   const orderNumber = order.order_number;
   const total = toNumber(order.total_price);
@@ -175,10 +156,7 @@ export function CheckoutPage() {
       setResult(uploaded);
     } catch (error) {
       setSubmitError(
-        describeApiError(
-          error,
-          "Your proof of payment could not be submitted. Please try again.",
-        ),
+        describeApiError(error, "Your proof of payment could not be submitted. Please try again."),
       );
     } finally {
       setSubmitting(false);
@@ -190,10 +168,7 @@ export function CheckoutPage() {
     const orderState = orderStatusLabel(result.order_status);
     return (
       <AppShell>
-        <PageHeader
-          title="Proof of payment received"
-          description={result.message}
-        />
+        <PageHeader title="Proof of payment received" description={result.message} />
 
         <section className="border border-border bg-card">
           <div className="border-b border-border bg-success-soft px-5 py-5">
@@ -208,7 +183,7 @@ export function CheckoutPage() {
 
           <div className="divide-y divide-border">
             <Row label="Order reference" value={orderNumber} />
-            <Row label="Service" value={order.product_name_snapshot} />
+            <Row label="Item" value={order.product_name_snapshot} />
             <Row label="Amount" value={totalLabel} />
             <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5">
               <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
@@ -226,17 +201,15 @@ export function CheckoutPage() {
 
           <div className="border-t border-border px-5 py-5">
             <p className="text-xs text-muted-foreground">
-              An administrator will verify your transfer manually. Your order remains on
-              hold until verification is complete — you will be notified of any change.
+              An administrator will verify your transfer manually. Your order remains on hold until
+              verification is complete — you will be notified of any change.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button asChild>
                 <RoleLink to={`/orders/${order.id}`}>View order details</RoleLink>
               </Button>
               <Button asChild variant="outline">
-                <RoleLink to={`/payments/${result.related_id}`}>
-                  View payment details
-                </RoleLink>
+                <RoleLink to={`/payments/${result.related_id}`}>View payment details</RoleLink>
               </Button>
             </div>
           </div>
@@ -254,11 +227,11 @@ export function CheckoutPage() {
   return (
     <AppShell>
       <RoleLink
-        to="/services"
+        to={backTarget}
         className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
-        Back to services
+        {backLabel}
       </RoleLink>
 
       <PageHeader
@@ -269,8 +242,8 @@ export function CheckoutPage() {
       <div className="mb-4 flex items-start gap-2 bg-warning-soft px-5 py-4">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />
         <p className="text-xs text-foreground">
-          There is no automated payment gateway on this platform. All payments are made
-          by bank transfer and verified manually by our team.
+          There is no automated payment gateway on this platform. All payments are made by bank
+          transfer and verified manually by our team.
         </p>
       </div>
 
@@ -279,7 +252,7 @@ export function CheckoutPage() {
           <Panel title="Order summary">
             <div className="divide-y divide-border">
               <Row label="Order reference" value={orderNumber} copyable />
-              <Row label="Service" value={order.product_name_snapshot} />
+              <Row label="Item" value={order.product_name_snapshot} />
               {order.sku_snapshot && <Row label="SKU" value={order.sku_snapshot} />}
               <Row label="Quantity" value={String(quantity)} />
               <Row label="Unit price" value={money(unitPrice)} />
@@ -287,24 +260,15 @@ export function CheckoutPage() {
                 <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
                   Order status
                 </span>
-                <StatusBadge
-                  label={currentOrderStatus.label}
-                  tone={currentOrderStatus.tone}
-                />
+                <StatusBadge label={currentOrderStatus.label} tone={currentOrderStatus.tone} />
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
                   Payment status
                 </span>
-                <StatusBadge
-                  label={currentPaymentStatus.label}
-                  tone={currentPaymentStatus.tone}
-                />
+                <StatusBadge label={currentPaymentStatus.label} tone={currentPaymentStatus.tone} />
               </div>
-              <Row
-                label="Fulfillment"
-                value={humaniseStatus(order.fulfillment_status)}
-              />
+              <Row label="Fulfillment" value={humaniseStatus(order.fulfillment_status)} />
               <div className="flex flex-wrap items-center justify-between gap-2 bg-muted px-5 py-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
                   Total amount due
@@ -349,9 +313,7 @@ export function CheckoutPage() {
                     Use this exact narration / reference
                   </p>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 bg-muted px-4 py-3">
-                    <code className="text-sm font-semibold text-foreground">
-                      {orderNumber}
-                    </code>
+                    <code className="text-sm font-semibold text-foreground">{orderNumber}</code>
                     <button
                       type="button"
                       onClick={() => navigator.clipboard?.writeText(orderNumber)}
@@ -385,8 +347,8 @@ export function CheckoutPage() {
           </header>
           <div className="px-5 py-5">
             <p className="text-xs text-muted-foreground">
-              Attach the bank receipt or transfer screenshot only. The amount and payment
-              reference are taken from your order automatically.
+              Attach the bank receipt or transfer screenshot only. The amount and payment reference
+              are taken from your order automatically.
             </p>
 
             <input
@@ -426,23 +388,15 @@ export function CheckoutPage() {
             )}
 
             {fileError && (
-              <p className="mt-3 bg-danger-soft px-3 py-2.5 text-xs text-danger">
-                {fileError}
-              </p>
+              <p className="mt-3 bg-danger-soft px-3 py-2.5 text-xs text-danger">{fileError}</p>
             )}
 
-            <Button
-              className="mt-5 w-full"
-              disabled={!file || submitting}
-              onClick={submit}
-            >
+            <Button className="mt-5 w-full" disabled={!file || submitting} onClick={submit}>
               {submitting ? "Uploading…" : "Upload proof of payment"}
             </Button>
 
             {submitError && (
-              <p className="mt-3 bg-danger-soft px-3 py-2.5 text-xs text-danger">
-                {submitError}
-              </p>
+              <p className="mt-3 bg-danger-soft px-3 py-2.5 text-xs text-danger">{submitError}</p>
             )}
 
             <p className="mt-3 text-[11px] text-muted-foreground">

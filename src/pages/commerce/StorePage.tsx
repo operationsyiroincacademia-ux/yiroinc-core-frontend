@@ -10,7 +10,7 @@ import { describeApiError } from "@/features/commerce/api";
 import { formatMoney } from "@/features/commerce/format";
 
 /**
- * Services / Store — shared across Academic, Exam Candidate and Corporate.
+ * Yiroinc Store — shared across Academic, Exam Candidate and Corporate.
  * Catalogue is served by GET /products (WooCommerce) via the verified API.
  */
 export function StorePage() {
@@ -23,7 +23,7 @@ export function StorePage() {
   return (
     <AppShell>
       <PageHeader
-        title="Services & store"
+        title="Yiroinc Store"
         description="Browse available services, open an item and place an order. Payment is by bank transfer — there is no automated payment gateway."
       />
 
@@ -53,10 +53,7 @@ export function StorePage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
-              <article
-                key={product.id}
-                className="flex flex-col border border-border bg-card p-5"
-              >
+              <article key={product.id} className="flex flex-col border border-border bg-card p-5">
                 {product.sku && (
                   <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
                     {product.sku}

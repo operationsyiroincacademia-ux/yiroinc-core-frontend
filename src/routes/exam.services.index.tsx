@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { StorePage } from "@/pages/commerce/StorePage";
 import { withExperience } from "@/pages/role-page";
 
-const TITLE = "Exam Services & Store | YiroInc Academia Portal";
+const TITLE = "Exam Yiroinc Store | YiroInc Academia Portal";
 const DESC =
   "Browse exam preparation services, open an item and place an order paid by manual bank transfer.";
 
