@@ -72,7 +72,7 @@ export function ExamDashboardPage() {
         actions={
           <Button asChild>
             <RoleLink to="/tutoring/new">
-              Request Tutoring
+              New tutoring request
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </RoleLink>
           </Button>

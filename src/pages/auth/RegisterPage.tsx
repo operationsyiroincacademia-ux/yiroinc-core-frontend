@@ -31,7 +31,7 @@ const SECONDARY: Record<
   academic: null,
   exam: {
     label: "Exam Type",
-    options: ["exam_candidate", "cfa_candidate", "frm_candidate"],
+    options: ["cfa_candidate", "frm_candidate"],
   },
   // Corporate signup always registers as corporate_client. consulting_lead is
   // an internal CRM classification and is never publicly selectable.
@@ -40,12 +40,8 @@ const SECONDARY: Record<
 
 const DEFAULT_PROFILE_TYPE: Record<AccountType, ProfileType> = {
   academic: "academic_user",
-  exam: "exam_candidate",
+  exam: "cfa_candidate",
   corporate: "corporate_client",
-};
-
-const SECONDARY_LABEL: Partial<Record<ProfileType, string>> = {
-  exam_candidate: "General Exam Candidate",
 };
 
 export function RegisterPage() {
@@ -186,7 +182,7 @@ export function RegisterPage() {
             >
               {secondary.options.map((type) => (
                 <option key={type} value={type}>
-                  {SECONDARY_LABEL[type] ?? PROFILE_TYPE_LABEL[type]}
+                  {PROFILE_TYPE_LABEL[type]}
                 </option>
               ))}
             </select>

@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { BookOpen, Download, ExternalLink, Search, ShoppingCart } from "lucide-react";
 
-import { RoleLink } from "@/components/shared/RoleLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useCreateOrder } from "@/features/commerce/hooks";
 import { downloadResourceFile, type Resource } from "@/features/resources/api";
 import { usePurchasedResources, useResources } from "@/features/resources/hooks";
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { roleHref, useExperience } from "@/lib/roles/experience-context";
 import { describeApiError } from "@/lib/api/errors";
 import {
   formatDate,
@@ -35,7 +37,11 @@ export function ResourcesPage() {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [activeDownload, setActiveDownload] = useState<string | number | null>(null);
+  const [activePurchase, setActivePurchase] = useState<string | number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const createOrder = useCreateOrder();
+  const experience = useExperience();
+  const navigate = useNavigate();
   const allResourcesQuery = useResources(activeTab === "all");
   const purchasedResourcesQuery = usePurchasedResources(activeTab === "purchased");
   const activeQuery = activeTab === "all" ? allResourcesQuery : purchasedResourcesQuery;
@@ -108,6 +114,29 @@ export function ResourcesPage() {
     } finally {
       setActiveDownload(null);
     }
+  };
+
+  const handleBuy = (resource: Resource) => {
+    setDownloadError(null);
+    if (!canBuy(resource)) return;
+
+    setActivePurchase(resource.id);
+    createOrder.mutate(
+      { orderSource: "resource", resourceId: resource.id },
+      {
+        onSuccess: (order) => {
+          navigate({
+            to: roleHref(experience, `/checkout/${order.order_id}`),
+          });
+        },
+        onError: (err) => {
+          setDownloadError(describeApiError(err, "This resource order could not be created."));
+        },
+        onSettled: () => {
+          setActivePurchase(null);
+        },
+      },
+    );
   };
 
   return (
@@ -271,15 +300,15 @@ export function ResourcesPage() {
                             Open
                           </Button>
                         )}
-                        {action === "buy" && resource.woo_product_id && (
-                          <Button asChild variant="outline" size="sm">
-                            <RoleLink
-                              to="/services/$productId"
-                              params={{ productId: String(resource.woo_product_id) }}
-                            >
-                              <ShoppingCart className="h-4 w-4" strokeWidth={2} />
-                              Buy
-                            </RoleLink>
+                        {action === "buy" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBuy(resource)}
+                            disabled={createOrder.isPending || activePurchase === resource.id}
+                          >
+                            <ShoppingCart className="h-4 w-4" strokeWidth={2} />
+                            {activePurchase === resource.id ? "Creating order…" : "Buy"}
                           </Button>
                         )}
                       </div>
@@ -302,7 +331,7 @@ function actionFor(resource: Resource): "download" | "open" | "buy" | null {
     return null;
   }
 
-  if (isBuyable(resource) && resource.woo_product_id) return "buy";
+  if (canBuy(resource)) return "buy";
   return null;
 }
 
@@ -319,9 +348,17 @@ function isBuyable(resource: Resource): boolean {
   return toFlag(resource.is_buyable) || resource.access_state === "buyable";
 }
 
+function canBuy(resource: Resource): boolean {
+  return isPaid(resource) && isBuyable(resource) && !toFlag(resource.is_purchased);
+}
+
+function isPaid(resource: Resource): boolean {
+  return toFlag(resource.is_paid) || toNumber(resource.price) > 0;
+}
+
 function priceOf(resource: Resource): string {
-  if (!resource.product) return "Price unavailable";
-  return formatMoney(toNumber(resource.product.price), resource.product.currency);
+  const price = toNumber(resource.price);
+  return resource.currency ? formatMoney(price, resource.currency) : price.toLocaleString();
 }
 
 function formatOf(resource: Resource): string {

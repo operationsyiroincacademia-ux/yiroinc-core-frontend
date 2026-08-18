@@ -92,6 +92,7 @@ export function PaymentDetailsPage() {
   const hasProof = toFlag(payment.has_pop);
   const badge = paymentBadge(payment.payment_status, hasProof);
   const events = paymentEvents(payment);
+  const verificationFields = getVerificationFields(payment);
 
   return (
     <AppShell>
@@ -136,9 +137,6 @@ export function PaymentDetailsPage() {
               <Field label="Payment method">{humanisePaymentMethod(payment.payment_method)}</Field>
               <Field label="Date created">{formatDateTime(payment.created_at)}</Field>
               <Field label="Date submitted">{formatDateTime(payment.submitted_at)}</Field>
-              <Field label="Verification status">
-                <StatusBadge label={badge.label} tone={badge.tone} />
-              </Field>
               <Field label="Proof of payment">{hasProof ? "Uploaded" : "Not uploaded"}</Field>
             </dl>
           </Panel>
@@ -167,22 +165,14 @@ export function PaymentDetailsPage() {
             </div>
           </Panel>
 
-          {(payment.verified_at || payment.rejected_at || payment.rejection_reason) && (
+          {verificationFields.length > 0 && (
             <Panel title="Verification">
               <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
-                <Field label="Verified by">
-                  {payment.verified_by ? `#${payment.verified_by}` : "—"}
-                </Field>
-                <Field label="Verified at">{formatDateTime(payment.verified_at)}</Field>
-                <Field label="Rejected by">
-                  {payment.rejected_by ? `#${payment.rejected_by}` : "—"}
-                </Field>
-                <Field label="Rejected at">{formatDateTime(payment.rejected_at)}</Field>
-                {payment.rejection_reason && (
-                  <div className="sm:col-span-2">
-                    <Field label="Rejection reason">{payment.rejection_reason}</Field>
+                {verificationFields.map((field) => (
+                  <div key={field.label} className={field.wide ? "sm:col-span-2" : undefined}>
+                    <Field label={field.label}>{field.value}</Field>
                   </div>
-                )}
+                ))}
               </dl>
             </Panel>
           )}
@@ -238,6 +228,31 @@ function submittedLabel(payment: Payment): string {
   return payment.submitted_at
     ? `Submitted ${formatDateTime(payment.submitted_at)}`
     : "Proof upload is recorded, but no submitted timestamp was returned.";
+}
+
+function getVerificationFields(payment: Payment) {
+  if (payment.payment_status === "verified") {
+    return [
+      ...(payment.verified_by ? [{ label: "Verified by", value: `#${payment.verified_by}` }] : []),
+      ...(payment.verified_at
+        ? [{ label: "Verified at", value: formatDateTime(payment.verified_at) }]
+        : []),
+    ];
+  }
+
+  if (payment.payment_status === "rejected") {
+    return [
+      ...(payment.rejected_by ? [{ label: "Rejected by", value: `#${payment.rejected_by}` }] : []),
+      ...(payment.rejected_at
+        ? [{ label: "Rejected at", value: formatDateTime(payment.rejected_at) }]
+        : []),
+      ...(payment.rejection_reason
+        ? [{ label: "Rejection reason", value: payment.rejection_reason, wide: true }]
+        : []),
+    ];
+  }
+
+  return [];
 }
 
 function paymentEvents(payment: Payment) {

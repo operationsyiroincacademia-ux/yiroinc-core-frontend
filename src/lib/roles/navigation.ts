@@ -45,7 +45,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Services & Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/services", icon: Store },
         { label: "Resources", to: "/resources", icon: BookOpen },
         { label: "Notifications", to: "/notifications", icon: Bell },
       ],
@@ -56,7 +56,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Services & Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/services", icon: Store },
         { label: "Tutoring Requests", to: "/tutoring", icon: GraduationCap },
         { label: "Resources", to: "/resources", icon: BookOpen },
         { label: "Notifications", to: "/notifications", icon: Bell },
@@ -68,7 +68,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Services & Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/services", icon: Store },
         { label: "Consulting Requests", to: "/consulting", icon: Briefcase },
         { label: "Procurement Requests", to: "/procurements", icon: Package },
         { label: "Resources", to: "/resources", icon: BookOpen },
@@ -90,9 +90,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
   },
 };
 
-const accountItems: NavItem[] = [
-  { label: "Profile", to: "/profile", icon: UserRound },
-];
+const accountItems: NavItem[] = [{ label: "Profile", to: "/profile", icon: UserRound }];
 
 /** Unused placeholder kept for future corporate services. */
 export const CORPORATE_FUTURE_ICONS = { Briefcase, Package };

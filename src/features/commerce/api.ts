@@ -47,13 +47,19 @@ export type CreatedOrder = {
   currency: string;
 };
 
+export type CreateOrderInput =
+  | { productId: number; quantity: number }
+  | { orderSource: "resource"; resourceId: string | number };
+
 /** GET /orders/{id} — numeric columns arrive as strings from the database. */
 export type Order = {
   id: string;
   order_number: string;
   user_id: string;
-  woo_product_id: string;
+  order_source?: string;
+  woo_product_id: string | null;
   woo_variation_id: string | null;
+  resource_id?: string | null;
   product_name_snapshot: string;
   sku_snapshot: string | null;
   quantity: string;
@@ -69,7 +75,6 @@ export type Order = {
   customer_note: string | null;
   admin_note: string | null;
 };
-
 
 export type CreatedPayment = {
   payment_id: number;
@@ -120,11 +125,16 @@ export async function fetchBankAccount() {
   return res.data.bank_account;
 }
 
-export async function createOrder(input: { productId: number; quantity: number }) {
+export async function createOrder(input: CreateOrderInput) {
+  const body =
+    "orderSource" in input
+      ? { order_source: input.orderSource, resource_id: input.resourceId }
+      : { woo_product_id: input.productId, quantity: input.quantity };
+
   const res = await apiRequest<ApiEnvelope<CreatedOrder>>("/orders", {
     method: "POST",
     token: token(),
-    body: { woo_product_id: input.productId, quantity: input.quantity },
+    body,
   });
   return res.data;
 }

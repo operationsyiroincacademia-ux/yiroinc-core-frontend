@@ -15,13 +15,6 @@ import type { ProfileType } from "@/lib/roles";
 export type ResourceSourceType = "file" | "external";
 export type ResourceAccessState = "accessible" | "purchased" | "buyable" | "restricted";
 
-export type ResourceProduct = {
-  id: number;
-  name: string;
-  price: number;
-  currency: string;
-};
-
 export type ResourceEntitlement = {
   id: number;
   order_id: number;
@@ -41,12 +34,13 @@ export type Resource = {
   mime_type?: string | null;
   file_size?: string | number | null;
   external_url?: string | null;
-  woo_product_id?: string | number | null;
+  price?: string | number | null;
+  currency?: string | null;
+  is_paid?: string | number | boolean | null;
   is_buyable?: string | number | boolean | null;
   is_purchased?: string | number | boolean | null;
   is_accessible?: string | number | boolean | null;
   access_state?: ResourceAccessState | string | null;
-  product?: ResourceProduct | null;
   entitlement?: ResourceEntitlement | null;
   profile_type?: ProfileType | null;
   exam_type?: string | null;
