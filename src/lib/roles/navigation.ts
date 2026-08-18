@@ -77,15 +77,10 @@ const blueprints: Record<Experience, NavBlueprint> = {
     },
   },
   admin: {
-    overview: sharedOverview,
+    overview: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
     services: {
       label: "Administration",
-      items: [
-        { label: "Requests Queue", to: "/requests", icon: ClipboardList },
-        { label: "Users", to: "/users", icon: Users },
-        { label: "Resources", to: "/resources", icon: BookOpen },
-        { label: "Notifications", to: "/notifications", icon: Bell },
-      ],
+      items: [],
     },
   },
 };
@@ -100,9 +95,10 @@ export function navigationFor(experience: Experience): NavSection[] {
   const resolve = (items: NavItem[]) =>
     items.map((item) => ({ ...item, to: roleHref(experience, item.to) }));
 
-  return [
+  const sections = [
     { label: "Overview", items: resolve(blueprint.overview) },
     { label: blueprint.services.label, items: resolve(blueprint.services.items) },
-    { label: "Account", items: resolve(accountItems) },
+    ...(experience === "admin" ? [] : [{ label: "Account", items: resolve(accountItems) }]),
   ];
+  return sections.filter((section) => section.items.length > 0);
 }

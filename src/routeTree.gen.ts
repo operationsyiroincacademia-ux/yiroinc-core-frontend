@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AcademicIndexRouteImport } from './routes/academic.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CorporateIndexRouteImport } from './routes/corporate.index'
 import { Route as ExamIndexRouteImport } from './routes/exam.index'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications.index'
@@ -76,6 +77,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const AcademicIndexRoute = AcademicIndexRouteImport.update({
   id: '/academic/',
   path: '/academic/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorporateIndexRoute = CorporateIndexRouteImport.update({
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic/': typeof AcademicIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/corporate/': typeof CorporateIndexRoute
   '/exam/': typeof ExamIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic': typeof AcademicIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/corporate': typeof CorporateIndexRoute
   '/exam': typeof ExamIndexRoute
   '/notifications': typeof NotificationsIndexRoute
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic/': typeof AcademicIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/corporate/': typeof CorporateIndexRoute
   '/exam/': typeof ExamIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic/'
+    | '/admin/'
     | '/corporate/'
     | '/exam/'
     | '/notifications/'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic'
+    | '/admin'
     | '/corporate'
     | '/exam'
     | '/notifications'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic/'
+    | '/admin/'
     | '/corporate/'
     | '/exam/'
     | '/notifications/'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   PaymentsPaymentIdRoute: typeof PaymentsPaymentIdRoute
   AcademicIndexRoute: typeof AcademicIndexRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   CorporateIndexRoute: typeof CorporateIndexRoute
   ExamIndexRoute: typeof ExamIndexRoute
   NotificationsIndexRoute: typeof NotificationsIndexRoute
@@ -691,6 +704,13 @@ declare module '@tanstack/react-router' {
       path: '/academic'
       fullPath: '/academic/'
       preLoaderRoute: typeof AcademicIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corporate/': {
@@ -1011,6 +1031,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   PaymentsPaymentIdRoute: PaymentsPaymentIdRoute,
   AcademicIndexRoute: AcademicIndexRoute,
+  AdminIndexRoute: AdminIndexRoute,
   CorporateIndexRoute: CorporateIndexRoute,
   ExamIndexRoute: ExamIndexRoute,
   NotificationsIndexRoute: NotificationsIndexRoute,

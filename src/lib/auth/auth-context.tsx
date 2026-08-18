@@ -125,14 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const cached = readCache();
-    if (cached) {
-      setUser(cached.user);
-      setProfile(cached.profile);
-      setAuth(cached.auth ?? null);
-      setStatus("authenticated");
-    }
-
     let cancelled = false;
     fetchCurrentSession(token)
       .then((session) => {
@@ -150,18 +142,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (input: { email: string; password: string }) => {
       const session = await loginWithPassword(input);
-      const experience = sessionExperience({
-        user: session.user,
-        profile: session.profile,
-        auth: session.auth ?? null,
-      });
+      setAuthToken(session.token);
+      const canonical = await fetchCurrentSession(session.token);
+      const experience = sessionExperience(canonical);
       if (!experience) {
         throw new Error("Sign in completed without a profile.");
       }
-      setAuthToken(session.token);
-      apply({ user: session.user, profile: session.profile, auth: session.auth ?? null });
+      apply(canonical);
       return {
-        profile: session.profile,
+        profile: canonical.profile,
         experience,
       };
     },
