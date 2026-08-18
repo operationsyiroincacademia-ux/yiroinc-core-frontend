@@ -35,7 +35,7 @@ export type AuthMeta = {
 export type AuthSession = {
   token: string;
   user: AuthUser;
-  profile: AuthProfile;
+  profile: AuthProfile | null;
   auth?: AuthMeta | null;
 };
 
@@ -69,9 +69,9 @@ export async function loginWithPassword(input: {
 /** GET /auth/me — restores the session from a stored JWT. */
 export async function fetchCurrentSession(
   token: string,
-): Promise<{ user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null }> {
+): Promise<{ user: AuthUser; profile: AuthProfile | null; auth?: AuthMeta | null }> {
   const res = await apiRequest<
-    ApiEnvelope<{ user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null }>
+    ApiEnvelope<{ user: AuthUser; profile: AuthProfile | null; auth?: AuthMeta | null }>
   >("/auth/me", { token });
   return res.data;
 }

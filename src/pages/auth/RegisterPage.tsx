@@ -5,11 +5,7 @@ import { AuthLayout, Field, inputClass } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { describeApiError } from "@/features/commerce/api";
 import { useAuth } from "@/lib/auth/auth-context";
-import {
-  PROFILE_TYPE_LABEL,
-  PROFILE_TYPE_TO_EXPERIENCE,
-  type ProfileType,
-} from "@/lib/roles";
+import { PROFILE_TYPE_LABEL, PROFILE_TYPE_TO_EXPERIENCE, type ProfileType } from "@/lib/roles";
 import { EXPERIENCE_BASE } from "@/lib/roles/experience-context";
 
 /**
@@ -24,10 +20,7 @@ const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
   { value: "corporate", label: "Corporate User" },
 ];
 
-const SECONDARY: Record<
-  AccountType,
-  { label: string; options: ProfileType[] } | null
-> = {
+const SECONDARY: Record<AccountType, { label: string; options: ProfileType[] } | null> = {
   academic: null,
   exam: {
     label: "Exam Type",
@@ -89,9 +82,7 @@ export function RegisterPage() {
       const target = PROFILE_TYPE_TO_EXPERIENCE[profile.profile_type] ?? "academic";
       navigate({ to: EXPERIENCE_BASE[target], replace: true });
     } catch (err) {
-      setError(
-        describeApiError(err, "Registration failed. Check your details and try again."),
-      );
+      setError(describeApiError(err, "Registration failed. Check your details and try again."));
     } finally {
       setSubmitting(false);
     }
@@ -189,9 +180,7 @@ export function RegisterPage() {
           </Field>
         )}
 
-        {error && (
-          <p className="bg-danger-soft px-3 py-2.5 text-xs text-danger">{error}</p>
-        )}
+        {error && <p className="bg-danger-soft px-3 py-2.5 text-xs text-danger">{error}</p>}
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Creating account…" : "Create account"}

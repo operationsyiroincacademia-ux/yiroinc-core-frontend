@@ -38,7 +38,7 @@ type AuthState = {
   isAdmin: boolean;
   experience: Experience | null;
   signIn: (input: { email: string; password: string }) => Promise<{
-    profile: AuthProfile;
+    profile: AuthProfile | null;
     experience: Experience;
   }>;
   signUp: (input: RegisterInput) => Promise<AuthProfile>;
@@ -46,7 +46,7 @@ type AuthState = {
 };
 
 const CACHE_KEY = "yac_session";
-type CachedSession = { user: AuthUser; profile: AuthProfile; auth?: AuthMeta | null };
+type CachedSession = { user: AuthUser; profile: AuthProfile | null; auth?: AuthMeta | null };
 
 function readCache(): CachedSession | null {
   if (typeof window === "undefined") return null;
@@ -78,7 +78,19 @@ function toFlag(value: string | number | boolean | null | undefined): boolean {
 }
 
 function sessionIsAdmin(session: Pick<CachedSession, "user" | "auth">): boolean {
-  return toFlag(session.auth?.is_admin) || toFlag(session.user.is_admin);
+  return (
+    toFlag(session.auth?.is_admin) ||
+    toFlag(session.auth?.capabilities?.manage_options) ||
+    toFlag(session.user.is_admin) ||
+    toFlag(session.user.capabilities?.manage_options)
+  );
+}
+
+function sessionExperience(session: CachedSession | null): Experience | null {
+  if (!session) return null;
+  const isAdmin = sessionIsAdmin(session);
+  if (isAdmin) return "admin";
+  return session.profile ? resolveExperience(session.profile.profile_type, false) : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -117,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (cached) {
       setUser(cached.user);
       setProfile(cached.profile);
+      setAuth(cached.auth ?? null);
       setStatus("authenticated");
     }
 
@@ -137,11 +150,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (input: { email: string; password: string }) => {
       const session = await loginWithPassword(input);
+      const experience = sessionExperience({
+        user: session.user,
+        profile: session.profile,
+        auth: session.auth ?? null,
+      });
+      if (!experience) {
+        throw new Error("Sign in completed without a profile.");
+      }
       setAuthToken(session.token);
       apply({ user: session.user, profile: session.profile, auth: session.auth ?? null });
       return {
         profile: session.profile,
-        experience: resolveExperience(session.profile.profile_type, false),
+        experience,
       };
     },
     [apply],
@@ -150,6 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(
     async (input: RegisterInput) => {
       const session = await registerAccount(input);
+      if (!session.profile) {
+        throw new Error("Registration completed without a profile.");
+      }
       setAuthToken(session.token);
       apply({ user: session.user, profile: session.profile, auth: session.auth ?? null });
       return session.profile;
@@ -170,7 +194,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
   }, [clear]);
 
-  const isAdmin = user ? sessionIsAdmin({ user, auth }) : false;
+  const session = user ? { user, profile, auth } : null;
+  const isAdmin = session ? sessionIsAdmin(session) : false;
+  const experience = sessionExperience(session);
 
   const value = useMemo<AuthState>(
     () => ({
@@ -179,12 +205,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       auth,
       isAdmin,
-      experience: profile ? resolveExperience(profile.profile_type, false) : null,
+      experience,
       signIn,
       signUp,
       signOut,
     }),
-    [status, user, profile, auth, isAdmin, signIn, signUp, signOut],
+    [status, user, profile, auth, isAdmin, experience, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

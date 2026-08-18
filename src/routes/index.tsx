@@ -10,8 +10,8 @@ const DESC =
   "Secure portal for YiroInc Academia clients: orders, payments, requests and protected files.";
 
 /**
- * Role-based dashboard redirection. The target comes from the authenticated
- * session's profile_type (login / register / GET /auth/me), never the URL.
+ * Identity-based dashboard redirection. Admin capability wins over profile;
+ * normal user targets come from the authenticated session's profile_type.
  */
 function IndexRedirect() {
   const { status, experience } = useAuth();
@@ -24,7 +24,6 @@ function IndexRedirect() {
       navigate({ to: "/login", replace: true });
     }
   }, [status, experience, navigate]);
-
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background">
