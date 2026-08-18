@@ -106,6 +106,49 @@ image
 | `POST/PUT/PATCH` | `/orders/{id}/dispatch` | Admin         | `dispatch_order()`      | `message`                                                 |
 | `POST/PUT/PATCH` | `/orders/{id}/fulfil`   | Admin         | `fulfil_order()`        | `message`                                                 |
 
+### Order Fields Returned
+
+`GET /orders` returns `orders[]`.
+
+Each list item includes all fields from the orders table plus the latest related payment context added by `YAC_Order_Service::format_order()`.
+
+```text
+id
+order_number
+user_id
+woo_product_id
+woo_variation_id
+product_name_snapshot
+sku_snapshot
+quantity
+unit_price
+total_price
+order_status
+payment_status
+fulfillment_status
+customer_note
+admin_note
+created_at
+updated_at
+currency
+payment_id
+has_pop
+related_payment_status
+```
+
+The added fields are normalized as:
+
+| Field | Type / Nullability |
+|---|---|
+| `currency` | String from `get_woocommerce_currency()` |
+| `payment_id` | Integer when a latest related payment exists, otherwise `null` |
+| `has_pop` | Integer `0` or `1` |
+| `related_payment_status` | String when a latest related payment exists, otherwise `null` |
+
+The other order fields are selected from the database order table. WordPress/MySQL commonly returns numeric database values as strings.
+
+`GET /orders/{id}` returns `order` with the same formatted order structure.
+
 ---
 
 ## Payments
@@ -117,6 +160,80 @@ image
 | `GET`            | `/payments/{id}`        | Authenticated | `get_payment()`    | `payment`                                                                |
 | `POST/PUT/PATCH` | `/payments/{id}/verify` | Admin         | `verify_payment()` | `message`                                                                |
 | `POST/PUT/PATCH` | `/payments/{id}/reject` | Admin         | `reject_payment()` | `message`                                                                |
+
+### Payment Fields Returned
+
+`GET /payments` returns `payments[]`. `GET /payments/{id}` returns `payment`.
+
+Both are selected directly from the payments table.
+
+```text
+id
+payment_reference
+order_id
+user_id
+payment_method
+amount_paid
+currency
+has_pop
+payment_status
+verified_by
+rejected_by
+user_note
+admin_note
+submitted_at
+verified_at
+rejected_at
+rejection_reason
+created_at
+updated_at
+```
+
+Payment rejection fields:
+
+| Field | Type / Nullability |
+|---|---|
+| `rejected_by` | WordPress user ID when rejected, otherwise `null` |
+| `rejected_at` | Datetime string when rejected, otherwise `null` |
+| `rejection_reason` | String when rejected, otherwise `null` |
+
+WordPress/MySQL may return numeric database values as strings.
+
+### Reject Payment
+
+`POST/PUT/PATCH /payments/{id}/reject`
+
+Admin only.
+
+Request body:
+
+| Field | Required | Validation |
+|---|---:|---|
+| `rejection_reason` | Yes | Required |
+
+Updates:
+
+```text
+payment_status = rejected
+rejected_by = current admin user ID
+rejected_at = current WordPress time
+rejection_reason
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Payment rejected successfully."
+  }
+}
+```
+
+Rejecting a payment creates timeline, notification and audit records. The notification `action_url` is `/payments/{id}`.
+
+No rejected-payment resubmission workflow is currently documented.
 
 ---
 
@@ -1650,10 +1767,135 @@ There is currently no automatic Resource notification creation.
 
 | Method | Endpoint               | Access        | Handler                 | Main Success Data                                                                      |
 | ------ | ---------------------- | ------------- | ----------------------- | -------------------------------------------------------------------------------------- |
-| `GET`  | `/dashboard/general`   | Authenticated | `general_dashboard()`   | `profile`, `resources`, `notifications`, `timeline`                                    |
-| `GET`  | `/dashboard/exam`      | Authenticated | `exam_dashboard()`      | `profile`, `payments`, `procurements`, `resources`, `notifications`, `timeline`        |
-| `GET`  | `/dashboard/corporate` | Authenticated | `corporate_dashboard()` | `profile`, `consulting_requests`, `payments`, `resources`, `notifications`, `timeline` |
+| `GET`  | `/dashboard/general`   | Authenticated | `general_dashboard()`   | `profile`, `resources`, `notifications`, `timeline`, `orders`                          |
+| `GET`  | `/dashboard/exam`      | Authenticated | `exam_dashboard()`      | `profile`, `payments`, `procurements`, `resources`, `notifications`, `timeline`, `orders`, `tutor_requests` |
+| `GET`  | `/dashboard/corporate` | Authenticated | `corporate_dashboard()` | `profile`, `consulting_requests`, `payments`, `resources`, `notifications`, `timeline`, `orders`, `procurements` |
 | `GET`  | `/dashboard/admin`     | Admin         | `admin_dashboard()`     | `summary`, `recent_activity`, `pending_*`                                              |
+
+Dashboard endpoints return data collections and records only. They do not return precomputed metric cards, dashboard CTA records, or `next_actions`.
+
+Dashboard `resources` are returned using authenticated-user targeting:
+
+```text
+YAC_Resource_Service::all($user_id)
+```
+
+### General Dashboard Response
+
+`GET /dashboard/general`
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {},
+    "resources": [],
+    "notifications": [],
+    "timeline": [],
+    "orders": []
+  }
+}
+```
+
+Field shapes:
+
+| Key | Shape |
+|---|---|
+| `profile` | Same profile record shape documented under `GET /profiles` |
+| `resources` | Array of Resource records |
+| `notifications` | Array of Notification records |
+| `timeline` | Array of Timeline records |
+| `orders` | Array of formatted Order records from `YAC_Order_Service::all($user_id)` |
+
+### Exam Dashboard Response
+
+`GET /dashboard/exam`
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {},
+    "payments": [],
+    "procurements": [],
+    "resources": [],
+    "notifications": [],
+    "timeline": [],
+    "orders": [],
+    "tutor_requests": []
+  }
+}
+```
+
+Field shapes:
+
+| Key | Shape |
+|---|---|
+| `profile` | Same profile record shape documented under `GET /profiles` |
+| `payments` | Array of Payment records from `YAC_Payment_Service::all($user_id)` |
+| `procurements` | Array of Procurement records from `YAC_Procurement_Service::all($user_id)` |
+| `resources` | Array of Resource records targeted to the authenticated user |
+| `notifications` | Array of Notification records |
+| `timeline` | Array of Timeline records |
+| `orders` | Array of formatted Order records from `YAC_Order_Service::all($user_id)` |
+| `tutor_requests` | Array of Tutor Request records for the authenticated user |
+
+### Corporate Dashboard Response
+
+`GET /dashboard/corporate`
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {},
+    "consulting_requests": [],
+    "payments": [],
+    "resources": [],
+    "notifications": [],
+    "timeline": [],
+    "orders": [],
+    "procurements": []
+  }
+}
+```
+
+Field shapes:
+
+| Key | Shape |
+|---|---|
+| `profile` | Same profile record shape documented under `GET /profiles` |
+| `consulting_requests` | Array of Consulting Request records from `YAC_Consulting_Service::all($user_id)` |
+| `payments` | Array of Payment records from `YAC_Payment_Service::all($user_id)` |
+| `resources` | Array of Resource records targeted to the authenticated user |
+| `notifications` | Array of Notification records |
+| `timeline` | Array of Timeline records |
+| `orders` | Array of formatted Order records from `YAC_Order_Service::all($user_id)` |
+| `procurements` | Array of Procurement records from `YAC_Procurement_Service::all($user_id)` |
+
+### Timeline Records in Dashboard Responses
+
+Dashboard `timeline` arrays use the same record shape as `GET /timeline`:
+
+```text
+id
+user_id
+actor_id
+event
+title
+description
+related_type
+related_id
+metadata
+visibility
+created_at
+```
 
 ---
 
