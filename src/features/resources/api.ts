@@ -1,7 +1,8 @@
 /**
  * Resources — verified endpoints:
- *   GET /resources      authenticated user's visible resources
- *   GET /resources/{id} single visible resource
+ *   GET /resources           authenticated user's visible resources
+ *   GET /resources/{id}      single visible resource
+ *   GET /resources/purchased authenticated user's entitled resources
  *
  * File resources are downloaded through the protected files endpoint.
  */
@@ -12,6 +13,21 @@ import { pickList, pickRecord, type ApiEnvelope } from "@/lib/api/envelope";
 import type { ProfileType } from "@/lib/roles";
 
 export type ResourceSourceType = "file" | "external";
+export type ResourceAccessState = "accessible" | "purchased" | "buyable" | "restricted";
+
+export type ResourceProduct = {
+  id: number;
+  name: string;
+  price: number;
+  currency: string;
+};
+
+export type ResourceEntitlement = {
+  id: number;
+  order_id: number;
+  payment_id: number;
+  granted_at: string;
+};
 
 export type Resource = {
   id: string | number;
@@ -25,6 +41,13 @@ export type Resource = {
   mime_type?: string | null;
   file_size?: string | number | null;
   external_url?: string | null;
+  woo_product_id?: string | number | null;
+  is_buyable?: string | number | boolean | null;
+  is_purchased?: string | number | boolean | null;
+  is_accessible?: string | number | boolean | null;
+  access_state?: ResourceAccessState | string | null;
+  product?: ResourceProduct | null;
+  entitlement?: ResourceEntitlement | null;
   profile_type?: ProfileType | null;
   exam_type?: string | null;
   is_public?: string | number | boolean | null;
@@ -38,6 +61,13 @@ function token() {
 
 export async function fetchResources() {
   const res = await apiRequest<ApiEnvelope<unknown>>("/resources", {
+    token: token(),
+  });
+  return pickList<Resource>(res.data, "resources");
+}
+
+export async function fetchPurchasedResources() {
+  const res = await apiRequest<ApiEnvelope<unknown>>("/resources/purchased", {
     token: token(),
   });
   return pickList<Resource>(res.data, "resources");

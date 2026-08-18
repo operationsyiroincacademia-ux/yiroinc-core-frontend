@@ -1010,12 +1010,14 @@ cancelled
 
 ## Resources
 
-Resources are platform content created by YiroInc administrators and made available to authenticated users based on resource visibility and targeting rules.
+Resources are platform content created by YiroInc administrators and made available to authenticated users based on Resource visibility, targeting rules and, for paid digital Resources, purchase entitlement.
 
 A resource can be either:
 
 - an uploaded protected file
 - an external URL
+
+A Resource may optionally be mapped to a WooCommerce product through `woo_product_id`. The mapping enables a paid digital-resource catalog relationship; it does not by itself grant access.
 
 ### Resource Endpoints
 
@@ -1024,12 +1026,13 @@ A resource can be either:
 | `POST` | `/resources` | Admin | `create_resource()` | `resource_id` |
 | `GET` | `/resources` | Authenticated | `get_resources()` | `resources[]` |
 | `GET` | `/resources/{id}` | Authenticated | `get_resource()` | `resource` |
+| `GET` | `/resources/purchased` | Authenticated | `get_purchased_resources()` | `resources[]` |
 
 ---
 
 ### Resource Fields Returned
 
-`GET /resources` and `GET /resources/{id}` return the same resource structure.
+`GET /resources`, `GET /resources/{id}` and `GET /resources/purchased` return the same formatted Resource structure.
 
 ```text
 id
@@ -1043,12 +1046,83 @@ file_format
 mime_type
 file_size
 external_url
+woo_product_id
+is_buyable
+is_purchased
+is_accessible
+access_state
+product
+entitlement
 profile_type
 exam_type
 is_public
 created_at
 updated_at
 ```
+
+Field types and nullability:
+
+| Field | Type / Nullability |
+|---|---|
+| `id` | Integer |
+| `title` | String |
+| `description` | String or `null` |
+| `category` | String or `null` |
+| `source_type` | String: `file` or `external` |
+| `file_id` | Integer when the Resource is accessible and has a linked file, otherwise `null` |
+| `file_name` | Original uploaded filename string or `null` |
+| `file_format` | Uppercase filename extension string or `null` |
+| `mime_type` | MIME type string or `null` |
+| `file_size` | Integer byte size or `null` |
+| `external_url` | URL string when the Resource is accessible and external, otherwise `null` |
+| `woo_product_id` | Integer WooCommerce product ID or `null` |
+| `is_buyable` | Integer `1` when `woo_product_id` is present, otherwise `0` |
+| `is_purchased` | Integer `1` when the authenticated user has a Resource entitlement, otherwise `0` |
+| `is_accessible` | Integer `1` when direct Resource access or entitlement access is available, otherwise `0` |
+| `access_state` | String: `accessible`, `purchased`, `buyable` or `restricted` |
+| `product` | Product object or `null` |
+| `entitlement` | Entitlement object or `null` |
+| `profile_type` | String or `null` |
+| `exam_type` | String or `null` |
+| `is_public` | Integer `1` or `0` |
+| `created_at` | Datetime string |
+| `updated_at` | Datetime string |
+
+`product` is returned when `woo_product_id` is present and WooCommerce can resolve the product. Otherwise it is `null`.
+
+Product object shape:
+
+```text
+id
+name
+price
+currency
+```
+
+| Product Field | Type / Nullability |
+|---|---|
+| `id` | Integer |
+| `name` | String |
+| `price` | Float |
+| `currency` | String from `get_woocommerce_currency()` |
+
+`entitlement` is returned when the authenticated user has purchased/access entitlement for the Resource. Otherwise it is `null`.
+
+Entitlement object shape:
+
+```text
+id
+order_id
+payment_id
+granted_at
+```
+
+| Entitlement Field | Type / Nullability |
+|---|---|
+| `id` | Integer |
+| `order_id` | Integer |
+| `payment_id` | Integer |
+| `granted_at` | Datetime string |
 
 Example file resource:
 
@@ -1065,6 +1139,13 @@ Example file resource:
   "mime_type": "application/pdf",
   "file_size": 204800,
   "external_url": null,
+  "woo_product_id": null,
+  "is_buyable": 0,
+  "is_purchased": 0,
+  "is_accessible": 1,
+  "access_state": "accessible",
+  "product": null,
+  "entitlement": null,
   "profile_type": "cfa_candidate",
   "exam_type": "CFA",
   "is_public": 0,
@@ -1072,6 +1153,58 @@ Example file resource:
   "updated_at": "2026-08-17 10:15:00"
 }
 ```
+
+---
+
+### Resource Access States
+
+Confirmed `access_state` values:
+
+```text
+accessible
+purchased
+buyable
+restricted
+```
+
+The backend derives these values from the formatted Resource state:
+
+| Value | Meaning |
+|---|---|
+| `accessible` | The Resource is accessible through direct access rules and the current user does not have a purchase entitlement for it. Direct access includes admin access and normal authenticated access to unmapped public/profile/exam-targeted Resources. |
+| `purchased` | The current user has a Resource entitlement. Entitlement access is valid even for a paid Resource mapped to a WooCommerce product. |
+| `buyable` | The Resource is mapped to a WooCommerce product but the current user does not have direct access or entitlement. The Resource may appear in the catalog, but protected `file_id` and `external_url` are not exposed. |
+| `restricted` | The Resource is not accessible and is not buyable. This is the formatter fallback when neither direct access, entitlement nor WooCommerce product mapping applies. |
+
+For normal authenticated users, `GET /resources` and `GET /resources/{id}` use catalog visibility rules: public/profile/exam-visible Resources and entitled Resources are returned. Paid visible Resources may be returned as `buyable` without exposing file/link access.
+
+---
+
+### Purchased Resources
+
+`GET /resources/purchased`
+
+Authenticated users only.
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "resources": []
+  }
+}
+```
+
+The endpoint returns Resources that have a matching row in the Resource entitlements table for the authenticated user:
+
+```text
+entitlement.user_id = current user ID
+entitlement.resource_id = resource.id
+```
+
+File Resources are included only when they have a valid linked `file_id`. External Resources are included. Results are ordered by `entitlement.granted_at DESC`.
 
 ---
 
@@ -1124,6 +1257,7 @@ Accepted JSON fields:
 | `category` | No | Nullable, maximum 100 characters |
 | `file_id` | Conditional | Required when `source_type=file`; forbidden for external resources |
 | `external_url` | Conditional | Required when `source_type=external`; forbidden for file resources |
+| `woo_product_id` | No | Nullable; when supplied, must be a valid positive WooCommerce product ID |
 | `profile_type` | Conditional | Required for non-public resources |
 | `exam_type` | No | Can only be used when `profile_type` is provided |
 | `is_public` | No | Stored as boolean-like `1` or `0` |
@@ -1141,6 +1275,14 @@ consulting_lead
 
 Unsupported profile types are rejected.
 
+`woo_product_id` validation:
+
+- empty or omitted values are stored as `null`
+- non-empty values are normalized with `absint()`
+- WooCommerce must be available
+- `wc_get_product(woo_product_id)` must resolve to an existing product
+- a WooCommerce product can be mapped to only one Resource; duplicate product-to-resource mappings are rejected
+
 ---
 
 ### Example File Resource Creation
@@ -1156,6 +1298,7 @@ After receiving the resulting `file_id`, create the Resource:
   "category": "study-guide",
   "source_type": "file",
   "file_id": 42,
+  "woo_product_id": null,
   "profile_type": "cfa_candidate",
   "exam_type": "CFA",
   "is_public": false
@@ -1182,6 +1325,7 @@ After successful Resource creation, the uploaded file is linked to the newly cre
   "category": "external-link",
   "source_type": "external",
   "external_url": "https://www.cfainstitute.org/",
+  "woo_product_id": null,
   "is_public": true
 }
 ```
@@ -1259,6 +1403,13 @@ Resource file downloads use Resource visibility rules rather than ordinary file 
 
 An authenticated non-owner may download a Resource file only when the associated Resource is accessible to that user.
 
+Entitlement is now a valid Resource access path for protected Resource downloads. For normal authenticated users, direct download access allows:
+
+- unmapped public/profile/exam-targeted Resources
+- Resources for which the user has a matching entitlement
+
+Paid Resources without entitlement do not expose `file_id` through the Resource response and do not pass Resource download authorization.
+
 Payment-proof file ownership rules remain unchanged.
 
 ---
@@ -1310,12 +1461,35 @@ The same visibility rules apply to:
 ```text
 GET /resources
 GET /resources/{id}
-GET /files/{file_id}/download
 ```
 
-Therefore, users cannot bypass Resource visibility by directly requesting a Resource ID or file ID.
+For paid Resources, catalog visibility and file/link access are intentionally different:
+
+- `GET /resources` and `GET /resources/{id}` may return a visible paid Resource as `buyable`.
+- `file_id` and `external_url` are returned only when `is_accessible = 1`.
+- `GET /files/{file_id}/download` requires direct access for unmapped Resources or entitlement access for paid Resources.
+
+Therefore, users cannot bypass Resource visibility or paid-resource entitlement by directly requesting a Resource ID or file ID.
 
 `exam_type` matching currently uses exact string matching.
+
+---
+
+### Paid Resource Purchase / Access Behavior
+
+Confirmed backend behavior:
+
+- Mapping a Resource to a WooCommerce product makes the product/resource relationship possible.
+- Creating an order does not grant Resource access.
+- Uploading proof of payment does not grant Resource access.
+- Payment verification alone does not grant Resource access.
+- Entitlement is granted when the mapped digital-resource order is fulfilled/completed and a verified payment exists for that order/user.
+- Entitled users can access/download the purchased Resource.
+- Ordinary unmapped WooCommerce products/services are unaffected.
+
+Entitlements are created by `YAC_Resource_Service::grant_entitlement_for_order($order)` when the relevant order workflow marks a mapped digital-resource order as fulfilled/completed and `YAC_Resource_Service::verified_payment_for_order($order_id, $user_id)` finds a verified payment.
+
+No rejected-payment resubmission workflow, automatic entitlement backfill, frontend tab behavior or frontend Buy CTA behavior is documented here.
 
 ---
 
@@ -1346,10 +1520,13 @@ The backend currently supports:
 Create
 List
 View
+List purchased
 Upload file
 Download file
 External link
 Visibility/targeting
+Paid-resource product mapping
+Purchase entitlement access
 ```
 
 Resource editing and deletion will require additional endpoints when the Resource management section of the Admin frontend is implemented.
