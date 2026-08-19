@@ -10,6 +10,17 @@ import {
 
 export type TutorRequestStatus = "pending" | "matched" | "in_progress" | "completed" | "cancelled";
 
+export type AssignedTutor = {
+  id?: string | number;
+  name: string;
+  email?: string | null;
+  whatsapp_number?: string | null;
+  exam_expertise?: string | string[] | null;
+  levels?: string | string[] | null;
+  timezone?: string | null;
+  bio?: string | null;
+};
+
 export type TutorRequest = {
   id: string | number;
   user_id?: string | number;
@@ -28,6 +39,7 @@ export type TutorRequest = {
   completed_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  tutor?: AssignedTutor | null;
 };
 
 export type CreateTutorRequestInput = {
@@ -65,7 +77,12 @@ export async function fetchTutorRequest(id: string | number) {
   const res = await apiRequest<ApiEnvelope<unknown>>(`/tutor-requests/${id}`, {
     token: token(),
   });
-  return pickRecord<TutorRequest>(res.data, "request");
+  const request = pickRecord<TutorRequest>(res.data, "request");
+  const data =
+    res.data && typeof res.data === "object" ? (res.data as Record<string, unknown>) : {};
+  const tutor =
+    data.tutor && typeof data.tutor === "object" ? (data.tutor as AssignedTutor) : request?.tutor;
+  return request ? { ...request, tutor: tutor ?? null } : null;
 }
 
 export async function createTutorRequest(input: CreateTutorRequestInput) {

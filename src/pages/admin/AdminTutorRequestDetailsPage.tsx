@@ -1,16 +1,33 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, PlayCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, PlayCircle, RefreshCw, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusTone } from "@/components/ui/status-badge";
 import { formatDateTime, humaniseStatus } from "@/features/commerce/format";
 import {
   useAdminTutorRequest,
+  useAdminTutors,
   useCompleteAdminTutorRequest,
+  useMatchAdminTutorRequest,
   useStartAdminTutorRequest,
 } from "@/features/admin/hooks";
+import type { AdminTutor } from "@/features/admin/api";
+import {
+  availabilityBadge,
+  expertiseText,
+  levelsText,
+  statusBadge,
+} from "@/features/admin/tutor-format";
 import { AdminLayout, PageHeader } from "@/layouts/AdminLayout/AdminLayout";
 import { describeApiError } from "@/lib/api/errors";
 
@@ -19,13 +36,31 @@ export function AdminTutorRequestDetailsPage() {
   const { data, isLoading, isError, error } = useAdminTutorRequest(requestId);
   const start = useStartAdminTutorRequest(requestId);
   const complete = useCompleteAdminTutorRequest(requestId);
+  const matchTutor = useMatchAdminTutorRequest(requestId);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [matchOpen, setMatchOpen] = useState(false);
+  const [selectedTutorId, setSelectedTutorId] = useState<string | number | null>(null);
+  const loadedRequest = data?.request;
+  const candidateQuery = useAdminTutors(
+    {
+      status: "active",
+      availability: "available",
+      examExpertise: loadedRequest?.exam_type || undefined,
+      level: requestLevelParam(loadedRequest?.exam_level),
+      page: 1,
+      perPage: 50,
+    },
+    matchOpen && Boolean(loadedRequest),
+  );
 
   if (isLoading) return <Loading title="Loading tutor request..." />;
   if (isError || !data?.request) return <ErrorState error={error} />;
 
   const request = data.request;
   const badge = requestBadge(request.status);
+  const assignedTutor = data.tutor;
+  const canMatch = !assignedTutor && request.status === "pending";
+  const canReassign = Boolean(assignedTutor) && request.status === "matched";
 
   return (
     <AdminLayout>
@@ -36,8 +71,25 @@ export function AdminTutorRequestDetailsPage() {
         actions={<StatusBadge label={badge.label} tone={badge.tone} />}
       />
       {actionError && <ErrorBanner message={actionError} />}
-      {(request.status === "matched" || request.status === "in_progress") && (
+      {(canMatch ||
+        canReassign ||
+        request.status === "matched" ||
+        request.status === "in_progress") && (
         <section className="mb-6 flex flex-wrap gap-2 border border-border bg-card px-5 py-4">
+          {(canMatch || canReassign) && (
+            <Button
+              type="button"
+              variant={canReassign ? "outline" : "default"}
+              onClick={() => {
+                setActionError(null);
+                setSelectedTutorId(assignedTutor?.id ?? null);
+                setMatchOpen(true);
+              }}
+            >
+              {canReassign ? <RefreshCw className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+              {canReassign ? "Change tutor" : "Match tutor"}
+            </Button>
+          )}
           {request.status === "matched" && (
             <Button
               type="button"
@@ -94,6 +146,11 @@ export function AdminTutorRequestDetailsPage() {
                 keys={["display_name", "name", "email", "phone"]}
               />
             </Panel>
+            {assignedTutor && (
+              <Panel title="Tutor">
+                <TutorFields tutor={assignedTutor} />
+              </Panel>
+            )}
             {data.timeline.length > 0 && (
               <Panel title="Timeline">
                 <Timeline timeline={data.timeline} />
@@ -108,7 +165,17 @@ export function AdminTutorRequestDetailsPage() {
                 ["Status", <StatusBadge label={badge.label} tone={badge.tone} />],
                 [
                   "Assigned tutor",
-                  request.assigned_tutor_id ? `#${request.assigned_tutor_id}` : null,
+                  assignedTutor?.id ? (
+                    <Link
+                      to="/admin/tutors/$tutorId"
+                      params={{ tutorId: String(assignedTutor.id) }}
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      {assignedTutor.name}
+                    </Link>
+                  ) : request.assigned_tutor_id ? (
+                    `#${request.assigned_tutor_id}`
+                  ) : null,
                 ],
                 ["Matched at", date(request.matched_at)],
                 ["Started at", date(request.session_started_at)],
@@ -118,6 +185,86 @@ export function AdminTutorRequestDetailsPage() {
           </Panel>
         }
       />
+
+      <Dialog open={matchOpen} onOpenChange={setMatchOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{canReassign ? "Change tutor" : "Match tutor"}</DialogTitle>
+            <DialogDescription>
+              Select an active, available tutor for this candidate request.
+            </DialogDescription>
+          </DialogHeader>
+
+          {candidateQuery.isLoading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading tutors...</p>
+          ) : candidateQuery.isError ? (
+            <p className="py-8 text-center text-sm text-danger">
+              {describeApiError(candidateQuery.error, "Tutors could not be loaded.")}
+            </p>
+          ) : (candidateQuery.data?.tutors ?? []).length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No suitable active and available tutors were returned.
+            </p>
+          ) : (
+            <div className="max-h-[420px] space-y-2 overflow-y-auto">
+              {(candidateQuery.data?.tutors ?? []).map((tutor) => {
+                const active = String(selectedTutorId ?? "") === String(tutor.id);
+                return (
+                  <button
+                    key={String(tutor.id)}
+                    type="button"
+                    onClick={() => setSelectedTutorId(tutor.id)}
+                    className={
+                      active
+                        ? "w-full border border-primary bg-primary/5 px-4 py-3 text-left"
+                        : "w-full border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/60"
+                    }
+                  >
+                    <span className="block text-sm font-semibold text-foreground">
+                      {tutor.name}
+                    </span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {expertiseText(tutor)} · {levelsText(tutor)} ·{" "}
+                      {tutor.timezone ?? "No timezone"}
+                    </span>
+                    <span className="mt-2 flex flex-wrap gap-2">
+                      <StatusBadge {...availabilityBadge(tutor.availability)} />
+                      <StatusBadge {...statusBadge(tutor.status)} />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {actionError && <p className="text-sm font-semibold text-danger">{actionError}</p>}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={matchTutor.isPending}
+              onClick={() => setMatchOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!selectedTutorId || matchTutor.isPending}
+              onClick={() => {
+                if (!selectedTutorId) return;
+                setActionError(null);
+                matchTutor.mutate(selectedTutorId, {
+                  onSuccess: () => setMatchOpen(false),
+                  onError: (err) =>
+                    setActionError(describeApiError(err, "Tutor could not be matched.")),
+                });
+              }}
+            >
+              {matchTutor.isPending ? "Saving..." : canReassign ? "Change tutor" : "Match tutor"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
@@ -218,6 +365,36 @@ function RecordFields({
   );
 }
 
+function TutorFields({ tutor }: { tutor: AdminTutor }) {
+  return (
+    <Fields
+      items={[
+        [
+          "Name",
+          tutor.id ? (
+            <Link
+              to="/admin/tutors/$tutorId"
+              params={{ tutorId: String(tutor.id) }}
+              className="font-semibold text-primary hover:underline"
+            >
+              {tutor.name}
+            </Link>
+          ) : (
+            tutor.name
+          ),
+        ],
+        ["Email", tutor.email],
+        ["WhatsApp number", tutor.whatsapp_number],
+        ["Exam expertise", expertiseText(tutor)],
+        ["Levels", levelsText(tutor)],
+        ["Timezone", tutor.timezone],
+        ["Availability", <StatusBadge {...availabilityBadge(tutor.availability)} />],
+        ["Status", <StatusBadge {...statusBadge(tutor.status)} />],
+      ]}
+    />
+  );
+}
+
 function Timeline({ timeline }: { timeline: unknown[] }) {
   return (
     <ol className="space-y-4 px-5 py-5">
@@ -266,6 +443,20 @@ function timelineText(entry: unknown) {
   if (richText) return String(richText);
   const event = record.event ?? record.status ?? record.type;
   return typeof event === "string" ? humaniseStatus(event) : "Activity recorded";
+}
+
+function requestLevelParam(level: string | null | undefined) {
+  const normalized = String(level ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  const aliases: Record<string, string> = {
+    level_i: "level_1",
+    level_ii: "level_2",
+    level_iii: "level_3",
+    part_i: "part_1",
+    part_ii: "part_2",
+  };
+  return aliases[normalized] ?? (normalized || undefined);
 }
 
 function timelineTime(entry: unknown) {

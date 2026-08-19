@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   completeConsultingRequest,
   completeTutorRequest,
+  createAdminTutor,
   dispatchOrder,
   fetchAdminDashboard,
   fetchAdminConsultingRequest,
@@ -13,15 +14,21 @@ import {
   fetchAdminPayments,
   fetchAdminProcurement,
   fetchAdminProcurements,
+  fetchAdminTutor,
   fetchAdminTutorRequest,
   fetchAdminTutorRequests,
+  fetchAdminTutors,
   fulfilOrder,
+  matchTutorRequest,
   markProcurementDelivered,
   rejectPayment,
   startConsultingRequest,
   startTutorRequest,
   updateOrderStatus,
+  updateAdminTutor,
   verifyPayment,
+  type AdminTutorInput,
+  type AdminTutorsParams,
   type AdminOrderStatus,
   type AdminPaymentsParams,
   type AdminRequestKind,
@@ -35,6 +42,8 @@ export const ADMIN_ORDERS_KEY = ["admin", "orders"];
 export const ADMIN_ORDER_KEY = ["admin", "order"];
 export const ADMIN_REQUESTS_KEY = ["admin", "requests"];
 export const ADMIN_REQUEST_KEY = ["admin", "request"];
+export const ADMIN_TUTORS_KEY = ["admin", "tutors"];
+export const ADMIN_TUTOR_KEY = ["admin", "tutor"];
 
 export function useAdminDashboard() {
   return useQuery({
@@ -111,6 +120,24 @@ export function useAdminTutorRequest(id: string | number | undefined) {
   return useQuery({
     queryKey: [...ADMIN_REQUEST_KEY, "tutor", String(id)],
     queryFn: () => fetchAdminTutorRequest(id!),
+    enabled: id !== undefined && id !== "",
+    retry: false,
+  });
+}
+
+export function useAdminTutors(params: AdminTutorsParams, enabled = true) {
+  return useQuery({
+    queryKey: [...ADMIN_TUTORS_KEY, params],
+    queryFn: () => fetchAdminTutors(params),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useAdminTutor(id: string | number | undefined) {
+  return useQuery({
+    queryKey: [...ADMIN_TUTOR_KEY, String(id)],
+    queryFn: () => fetchAdminTutor(id!),
     enabled: id !== undefined && id !== "",
     retry: false,
   });
@@ -228,6 +255,45 @@ function invalidateAdminRequestQueries(
   void queryClient.invalidateQueries({ queryKey: ADMIN_DASHBOARD_KEY });
   void queryClient.invalidateQueries({ queryKey: [...ADMIN_REQUESTS_KEY, kind] });
   void queryClient.invalidateQueries({ queryKey: [...ADMIN_REQUEST_KEY, kind, String(id)] });
+}
+
+function invalidateAdminTutorQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id?: string | number,
+) {
+  void queryClient.invalidateQueries({ queryKey: ADMIN_TUTORS_KEY });
+  if (id !== undefined) {
+    void queryClient.invalidateQueries({ queryKey: [...ADMIN_TUTOR_KEY, String(id)] });
+  }
+}
+
+export function useCreateAdminTutor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminTutorInput) => createAdminTutor(input),
+    onSuccess: () => invalidateAdminTutorQueries(queryClient),
+  });
+}
+
+export function useUpdateAdminTutor(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminTutorInput) => updateAdminTutor(id, input),
+    onSuccess: () => invalidateAdminTutorQueries(queryClient, id),
+  });
+}
+
+export function useMatchAdminTutorRequest(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tutorId: string | number) => matchTutorRequest(id, tutorId),
+    onSuccess: () => {
+      invalidateAdminRequestQueries(queryClient, "tutor", id);
+      void queryClient.invalidateQueries({ queryKey: ADMIN_TUTORS_KEY });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
+    },
+  });
 }
 
 export function useStartAdminTutorRequest(id: string | number) {

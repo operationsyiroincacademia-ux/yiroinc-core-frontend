@@ -49,6 +49,50 @@ export type AdminDashboard = {
 export type AdminPaymentStatus = "all" | "awaiting_verification" | "verified" | "rejected";
 export type AdminOrderStatus = "all" | "awaiting_payment" | "paid" | "completed";
 export type AdminRequestKind = "tutor" | "consulting" | "procurement";
+export type TutorAvailability = "available" | "unavailable";
+export type TutorStatus = "active" | "inactive";
+
+export type AdminTutor = {
+  id: string | number;
+  name: string;
+  email?: string | null;
+  whatsapp_number?: string | null;
+  exam_expertise?: string | string[] | null;
+  levels?: string | string[] | null;
+  timezone?: string | null;
+  availability?: TutorAvailability | string | null;
+  bio?: string | null;
+  status?: TutorStatus | string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type AdminTutorsParams = {
+  search?: string;
+  status?: TutorStatus | "all";
+  availability?: TutorAvailability | "all";
+  examExpertise?: string;
+  level?: string;
+  page?: number;
+  perPage?: number;
+};
+
+export type AdminTutorsResponse = {
+  tutors: AdminTutor[];
+  pagination: Pagination | null;
+};
+
+export type AdminTutorInput = {
+  name: string;
+  email?: string | null;
+  whatsapp_number?: string | null;
+  exam_expertise: string[];
+  levels: string[];
+  timezone?: string | null;
+  availability: TutorAvailability;
+  bio?: string | null;
+  status: TutorStatus;
+};
 
 export type AdminPaymentsParams = {
   status?: AdminPaymentStatus;
@@ -93,6 +137,7 @@ export type AdminRequestsParams = {
 export type AdminTutorRequestDetails = {
   request: TutorRequest;
   customer: Record<string, unknown> | null;
+  tutor: AdminTutor | null;
   timeline: unknown[];
 };
 
@@ -254,6 +299,22 @@ function queryString(params: {
   return query.toString();
 }
 
+function tutorQueryString(params: AdminTutorsParams = {}) {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 1),
+    per_page: String(params.perPage ?? 20),
+  });
+  const search = params.search?.trim();
+  if (search) query.set("search", search);
+  if (params.status && params.status !== "all") query.set("status", params.status);
+  if (params.availability && params.availability !== "all") {
+    query.set("availability", params.availability);
+  }
+  if (params.examExpertise) query.set("exam_expertise", params.examExpertise);
+  if (params.level) query.set("level", params.level);
+  return query.toString();
+}
+
 export async function fetchAdminOrders(
   params: AdminOrdersParams = {},
 ): Promise<AdminOrdersResponse> {
@@ -329,8 +390,53 @@ export async function fetchAdminTutorRequest(
   return {
     request,
     customer: nestedRecord<Record<string, unknown>>(data, "customer"),
+    tutor: nestedRecord<AdminTutor>(data, "tutor"),
     timeline: arrayOf<unknown>(data.timeline),
   };
+}
+
+export async function fetchAdminTutors(
+  params: AdminTutorsParams = {},
+): Promise<AdminTutorsResponse> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/tutors?${tutorQueryString(params)}`, {
+    token: token(),
+  });
+  return {
+    tutors: pickList<AdminTutor>(res.data, "tutors"),
+    pagination: pickPagination(res.data),
+  };
+}
+
+export async function fetchAdminTutor(id: string | number): Promise<AdminTutor | null> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/tutors/${id}`, { token: token() });
+  return pickRecord<AdminTutor>(res.data, "tutor");
+}
+
+export async function createAdminTutor(input: AdminTutorInput) {
+  const res = await apiRequest<ApiEnvelope<unknown>>("/admin/tutors", {
+    method: "POST",
+    token: token(),
+    body: input,
+  });
+  return pickRecord<AdminTutor>(res.data, "tutor") ?? pickRecord<AdminTutor>(res.data, "data");
+}
+
+export async function updateAdminTutor(id: string | number, input: AdminTutorInput) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/tutors/${id}`, {
+    method: "PATCH",
+    token: token(),
+    body: input,
+  });
+  return pickRecord<AdminTutor>(res.data, "tutor");
+}
+
+export async function matchTutorRequest(id: string | number, tutorId: string | number) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/tutor-requests/${id}/match`, {
+    method: "PATCH",
+    token: token(),
+    body: { tutor_id: tutorId },
+  });
+  return pickRecord<TutorRequest>(res.data, "request");
 }
 
 export async function startTutorRequest(id: string | number) {
