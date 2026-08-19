@@ -1,4 +1,5 @@
 import type { StatusTone } from "@/components/ui/status-badge";
+export { TIMEZONE_OPTIONS } from "./timezone-options";
 
 /**
  * PREVIEW DATA ONLY — visual stage.
@@ -93,8 +94,7 @@ export const TUTORING_REQUESTS: TutoringRequest[] = [
     subject: "CFA Level II — Fixed Income",
     mode: "Online, 1:1",
     requestedFor: "18 Aug 2026",
-    notes:
-      "Prefer a French-speaking tutor for fixed income analytics. Weekend sessions preferred.",
+    notes: "Prefer a French-speaking tutor for fixed income analytics. Weekend sessions preferred.",
     matchedAt: null,
     startedAt: null,
     completedAt: null,
@@ -113,8 +113,7 @@ export const TUTORING_REQUESTS: TutoringRequest[] = [
     subject: "FRM Part I — Financial Markets and Products",
     mode: "Online, group",
     requestedFor: "02 Jul 2026",
-    notes:
-      "Needed a refresher on derivatives and futures markets before the July sitting.",
+    notes: "Needed a refresher on derivatives and futures markets before the July sitting.",
     matchedAt: "21 Jun 2026, 11:15",
     startedAt: "25 Jun 2026, 16:00",
     completedAt: "02 Jul 2026, 18:30",
@@ -135,15 +134,5 @@ export const EXAM_LEVEL_OPTIONS: Record<string, string[]> = {
   ACCA: ["Applied Knowledge", "Applied Skills", "Strategic Professional"],
   Other: ["Not applicable"],
 };
-
-export const TIMEZONE_OPTIONS = [
-  "WAT (UTC+1)",
-  "GMT (UTC+0)",
-  "CET (UTC+2)",
-  "EST (UTC-5)",
-  "PST (UTC-8)",
-  "GST (UTC+4)",
-  "SGT (UTC+8)",
-];
 
 export const LANGUAGE_OPTIONS = ["English", "French", "Portuguese", "Arabic"];

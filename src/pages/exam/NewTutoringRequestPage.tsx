@@ -206,8 +206,8 @@ export function NewTutoringRequestPage() {
               >
                 <option value="">Select timezone</option>
                 {TIMEZONE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>

@@ -6,12 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminTutor, AdminTutorInput } from "@/features/admin/api";
-import {
-  EXAM_OPTIONS,
-  LEVEL_OPTIONS,
-  TIMEZONE_OPTIONS,
-  normalizeStringList,
-} from "@/features/admin/tutor-format";
+import { EXAM_OPTIONS, LEVEL_OPTIONS, normalizeStringList } from "@/features/admin/tutor-format";
+import { TIMEZONE_OPTIONS } from "@/features/tutoring/timezone-options";
 import { describeApiError } from "@/lib/api/errors";
 
 const SELECT_CLASS =
@@ -182,18 +178,19 @@ export function AdminTutorForm({
 
           <div>
             <Label htmlFor="timezone">Timezone</Label>
-            <Input
+            <select
               id="timezone"
-              list="admin-tutor-timezones"
+              className={SELECT_CLASS}
               value={form.timezone}
-              placeholder="Africa/Lagos"
               onChange={(event) => set("timezone")(event.target.value)}
-            />
-            <datalist id="admin-tutor-timezones">
-              {TIMEZONE_OPTIONS.map((timezone) => (
-                <option key={timezone} value={timezone} />
+            >
+              <option value="">Select timezone</option>
+              {TIMEZONE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
-            </datalist>
+            </select>
             <FieldError message={errors.timezone} />
           </div>
 

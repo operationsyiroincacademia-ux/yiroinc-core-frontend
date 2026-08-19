@@ -16,20 +16,6 @@ export const LEVEL_OPTIONS: Record<string, { label: string; value: string }[]> =
   ],
 };
 
-export const TIMEZONE_OPTIONS = [
-  "Africa/Lagos",
-  "Africa/Accra",
-  "Africa/Johannesburg",
-  "Europe/London",
-  "Europe/Paris",
-  "America/New_York",
-  "America/Los_Angeles",
-  "Asia/Dubai",
-  "Asia/Singapore",
-  "Asia/Kolkata",
-  "Australia/Sydney",
-];
-
 export function normalizeStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter((item): item is string => typeof item === "string" && item.trim() !== "");
