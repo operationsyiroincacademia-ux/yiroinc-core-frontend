@@ -120,9 +120,8 @@ export function CheckoutPage() {
   }
 
   const order = orderQuery.data;
-  const isResourceOrder = order.order_source === "resource";
-  const backTarget = isResourceOrder ? "/resources" : "/services";
-  const backLabel = isResourceOrder ? "Back to resources" : "Back to Yiroinc Store";
+  const backTarget = "/orders";
+  const backLabel = "Back to orders";
   const numericOrderId = toNumber(order.id);
   const orderNumber = order.order_number;
   const total = toNumber(order.total_price);

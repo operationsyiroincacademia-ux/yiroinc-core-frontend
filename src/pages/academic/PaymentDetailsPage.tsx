@@ -1,6 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import { RoleLink } from "@/components/shared/RoleLink";
-import { ArrowLeft, CheckCircle2, Clock, FileText, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, FileText, XCircle, type LucideIcon } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -15,11 +15,12 @@ import {
   toNumber,
 } from "@/features/commerce/format";
 import type { Payment } from "@/features/payments/api";
+import type { PaymentActivity } from "@/features/payments/api";
+import { paymentActivityDescription, paymentActivityLabel } from "@/features/payments/activity";
 
 /**
- * Data source: GET /payments/{id}. The endpoint returns the payment table
- * record only; proof file metadata/download URLs and resubmission workflows are
- * not exposed by the documented user-facing payment contract.
+ * Data source: GET /payments/{id}. Payment activity is rendered from the
+ * backend activity history in the order returned by the API.
  */
 
 function Panel({
@@ -57,7 +58,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function PaymentDetailsPage() {
   const { paymentId } = useParams({ strict: false }) as { paymentId: string };
-  const { data: payment, isLoading, isError, error } = usePayment(paymentId);
+  const { data, isLoading, isError, error } = usePayment(paymentId);
 
   if (isLoading) {
     return (
@@ -70,7 +71,7 @@ export function PaymentDetailsPage() {
     );
   }
 
-  if (isError || !payment) {
+  if (isError || !data?.payment) {
     return (
       <AppShell>
         <PageHeader
@@ -89,10 +90,9 @@ export function PaymentDetailsPage() {
     );
   }
 
+  const { payment, activity } = data;
   const hasProof = toFlag(payment.has_pop);
   const badge = paymentBadge(payment.payment_status, hasProof);
-  const events = paymentEvents(payment);
-  const verificationFields = getVerificationFields(payment);
 
   return (
     <AppShell>
@@ -164,48 +164,47 @@ export function PaymentDetailsPage() {
               </div>
             </div>
           </Panel>
-
-          {verificationFields.length > 0 && (
-            <Panel title="Verification">
-              <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
-                {verificationFields.map((field) => (
-                  <div key={field.label} className={field.wide ? "sm:col-span-2" : undefined}>
-                    <Field label={field.label}>{field.value}</Field>
-                  </div>
-                ))}
-              </dl>
-            </Panel>
-          )}
         </div>
 
-        <Panel title="Payment activity" description="Recorded payment timestamps.">
-          {events.length === 0 ? (
+        <Panel title="Payment activity" description="Recorded payment history.">
+          {activity.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-muted-foreground">
               No activity recorded yet.
             </p>
           ) : (
             <ol className="px-5 py-5">
-              {events.map((event, index) => (
-                <li key={event.label} className="flex gap-3.5">
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={
-                        index === 0
-                          ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent"
-                          : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border"
-                      }
-                    />
-                    {index < events.length - 1 && <span className="my-1 w-px flex-1 bg-border" />}
-                  </div>
-                  <div className={index < events.length - 1 ? "pb-6" : ""}>
-                    <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <event.icon className="h-3.5 w-3.5" strokeWidth={2} />
-                      {event.label}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{event.at}</p>
-                  </div>
-                </li>
-              ))}
+              {activity.map((event, index) => {
+                const Icon = paymentActivityIcon(event.event);
+                const description = paymentActivityDescription(event);
+                return (
+                  <li key={String(event.id)} className="flex gap-3.5">
+                    <div className="flex flex-col items-center">
+                      <span
+                        className={
+                          index === 0
+                            ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent"
+                            : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border"
+                        }
+                      />
+                      {index < activity.length - 1 && (
+                        <span className="my-1 w-px flex-1 bg-border" />
+                      )}
+                    </div>
+                    <div className={index < activity.length - 1 ? "pb-6" : ""}>
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                        {paymentActivityLabel(event)}
+                      </p>
+                      {description && (
+                        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+                      )}
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {formatDateTime(event.created_at)}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </Panel>
@@ -230,60 +229,9 @@ function submittedLabel(payment: Payment): string {
     : "Proof upload is recorded, but no submitted timestamp was returned.";
 }
 
-function getVerificationFields(payment: Payment) {
-  if (payment.payment_status === "verified") {
-    return [
-      ...(payment.verified_by ? [{ label: "Verified by", value: `#${payment.verified_by}` }] : []),
-      ...(payment.verified_at
-        ? [{ label: "Verified at", value: formatDateTime(payment.verified_at) }]
-        : []),
-    ];
-  }
-
-  if (payment.payment_status === "rejected") {
-    return [
-      ...(payment.rejected_by ? [{ label: "Rejected by", value: `#${payment.rejected_by}` }] : []),
-      ...(payment.rejected_at
-        ? [{ label: "Rejected at", value: formatDateTime(payment.rejected_at) }]
-        : []),
-      ...(payment.rejection_reason
-        ? [{ label: "Rejection reason", value: payment.rejection_reason, wide: true }]
-        : []),
-    ];
-  }
-
-  return [];
-}
-
-function paymentEvents(payment: Payment) {
-  const events = [];
-  if (payment.rejected_at) {
-    events.push({
-      label: "Payment rejected",
-      at: formatDateTime(payment.rejected_at),
-      icon: XCircle,
-    });
-  }
-  if (payment.verified_at) {
-    events.push({
-      label: "Payment verified",
-      at: formatDateTime(payment.verified_at),
-      icon: CheckCircle2,
-    });
-  }
-  if (payment.submitted_at) {
-    events.push({
-      label: "Proof submitted",
-      at: formatDateTime(payment.submitted_at),
-      icon: FileText,
-    });
-  }
-  if (payment.created_at) {
-    events.push({
-      label: "Payment created",
-      at: formatDateTime(payment.created_at),
-      icon: Clock,
-    });
-  }
-  return events;
+function paymentActivityIcon(event: PaymentActivity["event"]): LucideIcon {
+  if (event === "payment_approved") return CheckCircle2;
+  if (event === "payment_rejected") return XCircle;
+  if (event === "proof_submitted" || event === "replacement_proof_submitted") return FileText;
+  return Clock;
 }

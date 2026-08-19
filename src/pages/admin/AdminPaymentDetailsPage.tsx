@@ -1,6 +1,15 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileText, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +33,8 @@ import {
   useVerifyAdminPayment,
 } from "@/features/admin/hooks";
 import { formatDateTime, formatMoney, humaniseStatus, toNumber } from "@/features/commerce/format";
-import type { Payment } from "@/features/payments/api";
+import type { Payment, PaymentActivity } from "@/features/payments/api";
+import { paymentActivityDescription, paymentActivityLabel } from "@/features/payments/activity";
 import { AdminLayout, PageHeader } from "@/layouts/AdminLayout/AdminLayout";
 import { describeApiError } from "@/lib/api/errors";
 import type { StatusTone } from "@/components/ui/status-badge";
@@ -70,7 +80,7 @@ export function AdminPaymentDetailsPage() {
     );
   }
 
-  const { payment, order, customer, proof } = data;
+  const { payment, order, customer, proof, activity } = data;
   const badge = adminPaymentBadge(payment, proof);
   const awaitingVerification = isAwaitingVerification(payment, proof);
 
@@ -256,19 +266,13 @@ export function AdminPaymentDetailsPage() {
             </div>
           </Panel>
 
-          <Panel title="Approval/Rejection history">
-            {historyFields(payment).length === 0 ? (
+          <Panel title="Payment activity">
+            {activity.length === 0 ? (
               <p className="px-5 py-5 text-sm text-muted-foreground">
-                No verification or rejection history was returned.
+                No payment activity was returned.
               </p>
             ) : (
-              <dl className="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
-                {historyFields(payment).map((item) => (
-                  <div key={item.label} className={item.wide ? "sm:col-span-2" : undefined}>
-                    <Field label={item.label}>{item.value}</Field>
-                  </div>
-                ))}
-              </dl>
+              <PaymentActivityTimeline activity={activity} />
             )}
           </Panel>
         </div>
@@ -347,6 +351,41 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function field(value: ReactNode, label: string) {
   if (!hasValue(value)) return null;
   return <Field label={label}>{value}</Field>;
+}
+
+function PaymentActivityTimeline({ activity }: { activity: PaymentActivity[] }) {
+  return (
+    <ol className="px-5 py-5">
+      {activity.map((event, index) => {
+        const Icon = paymentActivityIcon(event.event);
+        const description = paymentActivityDescription(event);
+        return (
+          <li key={String(event.id)} className="flex gap-3.5">
+            <div className="flex flex-col items-center">
+              <span
+                className={
+                  index === 0
+                    ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent"
+                    : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border"
+                }
+              />
+              {index < activity.length - 1 && <span className="my-1 w-px flex-1 bg-border" />}
+            </div>
+            <div className={index < activity.length - 1 ? "pb-6" : ""}>
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                {paymentActivityLabel(event)}
+              </p>
+              {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {formatDateTime(event.created_at)}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 function hasValue(value: ReactNode): boolean {
@@ -452,34 +491,16 @@ function orderFields(order: Record<string, unknown> | null) {
     );
 }
 
-function historyFields(payment: Payment) {
-  if (payment.payment_status === "verified") {
-    return [
-      ...(payment.verified_by ? [{ label: "Approved by", value: `#${payment.verified_by}` }] : []),
-      ...(payment.verified_at
-        ? [{ label: "Approved at", value: formatDateTime(payment.verified_at) }]
-        : []),
-    ];
-  }
-
-  if (payment.payment_status === "rejected") {
-    return [
-      ...(payment.rejected_by ? [{ label: "Rejected by", value: `#${payment.rejected_by}` }] : []),
-      ...(payment.rejected_at
-        ? [{ label: "Rejected at", value: formatDateTime(payment.rejected_at) }]
-        : []),
-      ...(payment.rejection_reason
-        ? [{ label: "Rejection reason", value: payment.rejection_reason, wide: true }]
-        : []),
-    ];
-  }
-
-  return [];
-}
-
 function scalar(value: unknown): string | number | boolean | null {
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     return value;
   }
   return null;
+}
+
+function paymentActivityIcon(event: PaymentActivity["event"]): LucideIcon {
+  if (event === "payment_approved") return CheckCircle2;
+  if (event === "payment_rejected") return XCircle;
+  if (event === "proof_submitted" || event === "replacement_proof_submitted") return FileText;
+  return Clock;
 }

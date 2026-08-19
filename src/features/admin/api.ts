@@ -8,7 +8,7 @@ import {
   type Pagination,
 } from "@/lib/api/envelope";
 import type { TimelineEvent } from "@/features/dashboard/api";
-import type { Payment } from "@/features/payments/api";
+import type { Payment, PaymentActivity } from "@/features/payments/api";
 import type { Order } from "@/features/orders/api";
 import type { TutorRequest } from "@/features/tutoring/api";
 import type { ConsultingRequest, Procurement } from "@/features/corporate/api";
@@ -126,6 +126,7 @@ export type AdminPaymentDetails = {
   order: Order | Record<string, unknown> | null;
   customer: AdminPaymentCustomer | null;
   proof: AdminPaymentProof | null;
+  activity: PaymentActivity[];
 };
 
 function token() {
@@ -439,6 +440,7 @@ export async function fetchAdminPayment(id: string | number): Promise<AdminPayme
     order: nestedRecord<Order | Record<string, unknown>>(data, "order"),
     customer: nestedRecord<AdminPaymentCustomer>(data, "customer"),
     proof: nestedRecord<AdminPaymentProof>(data, "proof"),
+    activity: arrayOf<PaymentActivity>(data.activity),
   };
 }
 
