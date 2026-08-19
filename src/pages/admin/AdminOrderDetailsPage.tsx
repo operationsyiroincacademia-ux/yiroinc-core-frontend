@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { downloadAdminProof, type AdminPaymentProof } from "@/features/admin/api";
 import {
   useAdminOrder,
+  useFulfilAdminOrder,
   useRejectAdminOrderPayment,
   useVerifyAdminOrderPayment,
 } from "@/features/admin/hooks";
@@ -29,6 +30,7 @@ export function AdminOrderDetailsPage() {
   const { orderId } = useParams({ strict: false }) as { orderId: string };
   const { data, isLoading, isError, error } = useAdminOrder(orderId);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [fulfilOpen, setFulfilOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export function AdminOrderDetailsPage() {
   const paymentId = data?.payment ? idValue(paymentValue(data.payment, "id")) : null;
   const approvePayment = useVerifyAdminOrderPayment(paymentId ?? "", orderId);
   const rejectPayment = useRejectAdminOrderPayment(paymentId ?? "", orderId);
+  const fulfilOrder = useFulfilAdminOrder(orderId);
 
   if (isLoading) {
     return (
@@ -71,6 +74,7 @@ export function AdminOrderDetailsPage() {
   const paymentBadge = adminPaymentStatusBadge(paymentStatus, Boolean(proof?.file_id));
   const canApproveReject =
     Boolean(paymentId) && Boolean(proof?.file_id) && isReviewablePaymentStatus(paymentStatus);
+  const canFulfil = paymentStatus === "verified" && order.admin_order_status !== "completed";
 
   const openProof = async (mode: "open" | "download") => {
     setProofError(null);
@@ -124,6 +128,16 @@ export function AdminOrderDetailsPage() {
     });
   };
 
+  const confirmFulfil = () => {
+    setActionError(null);
+    fulfilOrder.mutate(undefined, {
+      onSuccess: () => {
+        setFulfilOpen(false);
+      },
+      onError: (err) => setActionError(describeApiError(err, "Order could not be fulfilled.")),
+    });
+  };
+
   return (
     <AdminLayout>
       <Link
@@ -146,34 +160,52 @@ export function AdminOrderDetailsPage() {
         </section>
       )}
 
-      {canApproveReject && (
+      {(canApproveReject || canFulfil) && (
         <section className="mb-6 flex flex-wrap gap-2 border border-border bg-card px-5 py-4">
-          <Button
-            type="button"
-            disabled={approvePayment.isPending}
-            onClick={() => {
-              setActionError(null);
-              approvePayment.mutate(undefined, {
-                onError: (err) =>
-                  setActionError(describeApiError(err, "Payment could not be approved.")),
-              });
-            }}
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            {approvePayment.isPending ? "Approving..." : "Approve payment"}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={rejectPayment.isPending}
-            onClick={() => {
-              setActionError(null);
-              setRejectOpen(true);
-            }}
-          >
-            <XCircle className="h-4 w-4" />
-            Reject payment
-          </Button>
+          {canApproveReject && (
+            <>
+              <Button
+                type="button"
+                disabled={approvePayment.isPending}
+                onClick={() => {
+                  setActionError(null);
+                  approvePayment.mutate(undefined, {
+                    onError: (err) =>
+                      setActionError(describeApiError(err, "Payment could not be approved.")),
+                  });
+                }}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {approvePayment.isPending ? "Approving..." : "Approve payment"}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={rejectPayment.isPending}
+                onClick={() => {
+                  setActionError(null);
+                  setRejectOpen(true);
+                }}
+              >
+                <XCircle className="h-4 w-4" />
+                Reject payment
+              </Button>
+            </>
+          )}
+          {canFulfil && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={fulfilOrder.isPending}
+              onClick={() => {
+                setActionError(null);
+                setFulfilOpen(true);
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Fulfil order
+            </Button>
+          )}
         </section>
       )}
 
@@ -323,6 +355,32 @@ export function AdminOrderDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={fulfilOpen} onOpenChange={setFulfilOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fulfil this order?</DialogTitle>
+            <DialogDescription>
+              This confirms that the customer has received/accessed their purchase. The order will
+              be marked as completed.
+            </DialogDescription>
+          </DialogHeader>
+          {actionError && <p className="text-sm font-semibold text-danger">{actionError}</p>}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={fulfilOrder.isPending}
+              onClick={() => setFulfilOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" disabled={fulfilOrder.isPending} onClick={confirmFulfil}>
+              {fulfilOrder.isPending ? "Fulfilling..." : "Confirm fulfilment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
@@ -404,6 +462,7 @@ function adminOrderStatusBadge(status: string | null | undefined): {
   tone: StatusTone;
 } {
   if (status === "paid") return { label: "Paid", tone: "success" };
+  if (status === "completed") return { label: "Completed", tone: "success" };
   if (status === "awaiting_payment") return { label: "Awaiting payment", tone: "warning" };
   return { label: status ? humaniseStatus(status) : "-", tone: "neutral" };
 }

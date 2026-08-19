@@ -192,6 +192,8 @@ function invalidateAdminOrderQueries(
   void queryClient.invalidateQueries({ queryKey: ADMIN_DASHBOARD_KEY });
   void queryClient.invalidateQueries({ queryKey: ADMIN_ORDERS_KEY });
   void queryClient.invalidateQueries({ queryKey: [...ADMIN_ORDER_KEY, String(id)] });
+  void queryClient.invalidateQueries({ queryKey: ["orders"] });
+  void queryClient.invalidateQueries({ queryKey: ["order", String(id)] });
 }
 
 export function useUpdateAdminOrderStatus(id: string | number) {

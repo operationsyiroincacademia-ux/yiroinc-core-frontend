@@ -47,7 +47,7 @@ export type AdminDashboard = {
 };
 
 export type AdminPaymentStatus = "all" | "awaiting_verification" | "verified" | "rejected";
-export type AdminOrderStatus = "all" | "awaiting_payment" | "paid";
+export type AdminOrderStatus = "all" | "awaiting_payment" | "paid" | "completed";
 export type AdminRequestKind = "tutor" | "consulting" | "procurement";
 
 export type AdminPaymentsParams = {

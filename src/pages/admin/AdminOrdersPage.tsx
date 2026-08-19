@@ -19,6 +19,7 @@ const FILTERS: { label: string; value: AdminOrderStatus }[] = [
   { label: "All", value: "all" },
   { label: "Awaiting payment", value: "awaiting_payment" },
   { label: "Paid", value: "paid" },
+  { label: "Completed", value: "completed" },
 ];
 
 const PER_PAGE = 20;
@@ -251,6 +252,7 @@ function adminOrderStatusBadge(status: string | null | undefined): {
   tone: StatusTone;
 } {
   if (status === "paid") return { label: "Paid", tone: "success" };
+  if (status === "completed") return { label: "Completed", tone: "success" };
   if (status === "awaiting_payment") return { label: "Awaiting payment", tone: "warning" };
   return { label: status ? humaniseStatus(status) : "-", tone: "neutral" };
 }
