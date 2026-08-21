@@ -85,6 +85,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
         { label: "Payments", to: "/payments", icon: CreditCard },
         { label: "Requests", to: "/requests", icon: ClipboardList },
         { label: "Tutors", to: "/tutors", icon: Users },
+        { label: "Resources", to: "/resources", icon: BookOpen },
       ],
     },
   },

@@ -4,6 +4,7 @@ import {
   completeConsultingRequest,
   completeTutorRequest,
   createAdminTutor,
+  createAdminResource,
   dispatchOrder,
   fetchAdminDashboard,
   fetchAdminConsultingRequest,
@@ -14,6 +15,8 @@ import {
   fetchAdminPayments,
   fetchAdminProcurement,
   fetchAdminProcurements,
+  fetchAdminResource,
+  fetchAdminResources,
   fetchAdminTutor,
   fetchAdminTutorRequest,
   fetchAdminTutorRequests,
@@ -21,12 +24,17 @@ import {
   fulfilOrder,
   matchTutorRequest,
   markProcurementDelivered,
+  removeAdminResource,
   rejectPayment,
   startConsultingRequest,
   startTutorRequest,
   updateOrderStatus,
   updateAdminTutor,
+  updateAdminResource,
+  uploadAdminResourceFile,
   verifyPayment,
+  type AdminResourceInput,
+  type AdminResourcesParams,
   type AdminTutorInput,
   type AdminTutorsParams,
   type AdminOrderStatus,
@@ -44,6 +52,8 @@ export const ADMIN_REQUESTS_KEY = ["admin", "requests"];
 export const ADMIN_REQUEST_KEY = ["admin", "request"];
 export const ADMIN_TUTORS_KEY = ["admin", "tutors"];
 export const ADMIN_TUTOR_KEY = ["admin", "tutor"];
+export const ADMIN_RESOURCES_KEY = ["admin", "resources"];
+export const ADMIN_RESOURCE_KEY = ["admin", "resource"];
 
 export function useAdminDashboard() {
   return useQuery({
@@ -130,6 +140,23 @@ export function useAdminTutors(params: AdminTutorsParams, enabled = true) {
     queryKey: [...ADMIN_TUTORS_KEY, params],
     queryFn: () => fetchAdminTutors(params),
     enabled,
+    retry: false,
+  });
+}
+
+export function useAdminResources(params: AdminResourcesParams) {
+  return useQuery({
+    queryKey: [...ADMIN_RESOURCES_KEY, params],
+    queryFn: () => fetchAdminResources(params),
+    retry: false,
+  });
+}
+
+export function useAdminResource(id: string | number | undefined) {
+  return useQuery({
+    queryKey: [...ADMIN_RESOURCE_KEY, String(id)],
+    queryFn: () => fetchAdminResource(id!),
+    enabled: id !== undefined && id !== "",
     retry: false,
   });
 }
@@ -267,6 +294,20 @@ function invalidateAdminTutorQueries(
   }
 }
 
+function invalidateAdminResourceQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id?: string | number,
+) {
+  void queryClient.invalidateQueries({ queryKey: ADMIN_DASHBOARD_KEY });
+  void queryClient.invalidateQueries({ queryKey: ADMIN_RESOURCES_KEY });
+  void queryClient.invalidateQueries({ queryKey: ["resources"] });
+  void queryClient.invalidateQueries({ queryKey: ["resources", "purchased"] });
+  if (id !== undefined) {
+    void queryClient.invalidateQueries({ queryKey: [...ADMIN_RESOURCE_KEY, String(id)] });
+    void queryClient.invalidateQueries({ queryKey: ["resources", String(id)] });
+  }
+}
+
 export function useCreateAdminTutor() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -281,6 +322,34 @@ export function useUpdateAdminTutor(id: string | number) {
     mutationFn: (input: AdminTutorInput) => updateAdminTutor(id, input),
     onSuccess: () => invalidateAdminTutorQueries(queryClient, id),
   });
+}
+
+export function useCreateAdminResource() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminResourceInput) => createAdminResource(input),
+    onSuccess: (resource) => invalidateAdminResourceQueries(queryClient, resource?.id),
+  });
+}
+
+export function useUpdateAdminResource(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminResourceInput) => updateAdminResource(id, input),
+    onSuccess: () => invalidateAdminResourceQueries(queryClient, id),
+  });
+}
+
+export function useRemoveAdminResource(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => removeAdminResource(id),
+    onSuccess: () => invalidateAdminResourceQueries(queryClient, id),
+  });
+}
+
+export function useUploadAdminResourceFile() {
+  return useMutation({ mutationFn: uploadAdminResourceFile });
 }
 
 export function useMatchAdminTutorRequest(id: string | number) {

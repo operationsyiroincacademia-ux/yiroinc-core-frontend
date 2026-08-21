@@ -12,6 +12,8 @@ import type { Payment, PaymentActivity } from "@/features/payments/api";
 import type { Order } from "@/features/orders/api";
 import type { TutorRequest } from "@/features/tutoring/api";
 import type { ConsultingRequest, Procurement } from "@/features/corporate/api";
+import type { Resource, ResourceSourceType } from "@/features/resources/api";
+import type { ResourceAudience } from "@/features/resources/api";
 
 export type AdminDashboardSummary = {
   users: string | number;
@@ -104,6 +106,55 @@ export type AdminPaymentsParams = {
 export type AdminPaymentsResponse = {
   payments: Payment[];
   pagination: Pagination | null;
+};
+
+export type AdminResourcePricing = "all" | "free" | "paid";
+export type AdminResourceVisibility = "all" | "public" | "private";
+export type AdminResourceExam = "all" | "CFA" | "FRM";
+export type AdminResourceSource = "all" | ResourceSourceType;
+export type AdminResourceAudience = "all" | ResourceAudience;
+
+export type AdminResourcesParams = {
+  search?: string;
+  pricing?: AdminResourcePricing;
+  audience?: AdminResourceAudience;
+  exam?: AdminResourceExam;
+  visibility?: AdminResourceVisibility;
+  sourceType?: AdminResourceSource;
+  page?: number;
+  perPage?: number;
+};
+
+export type AdminResourcesResponse = {
+  resources: Resource[];
+  pagination: Pagination | null;
+};
+
+export type AdminResourceInput = {
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  source_type: ResourceSourceType;
+  file_id?: string | number | null;
+  external_url?: string | null;
+  price: number;
+  currency: "NGN";
+  audiences: ResourceAudience[];
+  exam_type?: "CFA" | "FRM" | null;
+  exam_level?: "level_1" | "level_2" | "level_3" | "part_1" | "part_2" | null;
+  is_public: boolean;
+};
+
+export type UploadedResourceFile = {
+  file_id: string | number;
+  related_type?: string | null;
+  related_id?: string | number | null;
+  file_type?: string | null;
+  file_name?: string | null;
+  original_name?: string | null;
+  mime_type?: string | null;
+  file_size?: string | number | null;
+  message?: string | null;
 };
 
 export type AdminOrdersParams = {
@@ -200,6 +251,23 @@ function countRecord(value: unknown): Record<string, string | number> {
       typeof entry === "string" || typeof entry === "number" ? entry : 0,
     ]),
   );
+}
+
+function uploadedResourceFileOf(value: unknown): UploadedResourceFile | null {
+  const record = recordOf(value);
+  if (record.file_id !== undefined && record.file_id !== null) {
+    return record as UploadedResourceFile;
+  }
+  for (const key of ["file", "upload", "resource_file"]) {
+    const nested = record[key];
+    if (nested && typeof nested === "object") {
+      const nestedRecord = nested as Record<string, unknown>;
+      if (nestedRecord.file_id !== undefined && nestedRecord.file_id !== null) {
+        return nestedRecord as UploadedResourceFile;
+      }
+    }
+  }
+  return null;
 }
 
 function summaryOf(value: unknown): AdminDashboardSummary {
@@ -313,6 +381,89 @@ function tutorQueryString(params: AdminTutorsParams = {}) {
   if (params.examExpertise) query.set("exam_expertise", params.examExpertise);
   if (params.level) query.set("level", params.level);
   return query.toString();
+}
+
+function adminResourcesQueryString(params: AdminResourcesParams = {}) {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 1),
+    per_page: String(params.perPage ?? 20),
+  });
+  const search = params.search?.trim();
+  if (search) query.set("search", search);
+  if (params.pricing && params.pricing !== "all") query.set("pricing", params.pricing);
+  if (params.audience && params.audience !== "all") query.set("audience", params.audience);
+  if (params.exam && params.exam !== "all") query.set("exam", params.exam);
+  if (params.visibility && params.visibility !== "all") query.set("visibility", params.visibility);
+  if (params.sourceType && params.sourceType !== "all") {
+    query.set("source_type", params.sourceType);
+  }
+  return query.toString();
+}
+
+export async function fetchAdminResources(
+  params: AdminResourcesParams = {},
+): Promise<AdminResourcesResponse> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(
+    `/admin/resources?${adminResourcesQueryString(params)}`,
+    { token: token() },
+  );
+  return {
+    resources: pickList<Resource>(res.data, "resources"),
+    pagination: pickPagination(res.data),
+  };
+}
+
+export async function fetchAdminResource(id: string | number): Promise<Resource | null> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/resources/${id}`, { token: token() });
+  return pickRecord<Resource>(res.data, "resource");
+}
+
+export async function createAdminResource(input: AdminResourceInput) {
+  const res = await apiRequest<ApiEnvelope<unknown>>("/admin/resources", {
+    method: "POST",
+    token: token(),
+    body: input,
+  });
+  return pickRecord<Resource>(res.data, "resource");
+}
+
+export async function updateAdminResource(id: string | number, input: AdminResourceInput) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/resources/${id}`, {
+    method: "PATCH",
+    token: token(),
+    body: input,
+  });
+  return pickRecord<Resource>(res.data, "resource");
+}
+
+export async function removeAdminResource(id: string | number) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/resources/${id}`, {
+    method: "DELETE",
+    token: token(),
+  });
+  return res.data;
+}
+
+export async function uploadAdminResourceFile(input: {
+  resourceId?: string | number;
+  file: File;
+}): Promise<UploadedResourceFile> {
+  const formData = new FormData();
+  formData.append("file", input.file);
+  formData.append("related_type", "resource");
+  formData.append("related_id", String(input.resourceId ?? 0));
+  formData.append("file_type", "resource_file");
+
+  const res = await apiRequest<ApiEnvelope<unknown>>("/files/upload", {
+    method: "POST",
+    token: token(),
+    formData,
+  });
+  const record = uploadedResourceFileOf(res.data);
+  if (!record?.file_id) {
+    throw new Error("Upload completed without a file ID.");
+  }
+  return record;
 }
 
 export async function fetchAdminOrders(

@@ -14,6 +14,7 @@ import type { ProfileType } from "@/lib/roles";
 
 export type ResourceSourceType = "file" | "external";
 export type ResourceAccessState = "accessible" | "purchased" | "buyable" | "restricted";
+export type ResourceAudience = "academic" | "exam_candidate" | "corporate";
 
 export type ResourceEntitlement = {
   id: number;
@@ -42,8 +43,10 @@ export type Resource = {
   is_accessible?: string | number | boolean | null;
   access_state?: ResourceAccessState | string | null;
   entitlement?: ResourceEntitlement | null;
+  audiences?: ResourceAudience[] | string[] | null;
   profile_type?: ProfileType | null;
   exam_type?: string | null;
+  exam_level?: string | null;
   is_public?: string | number | boolean | null;
   created_at?: string | null;
   updated_at?: string | null;
