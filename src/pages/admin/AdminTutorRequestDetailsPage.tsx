@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, PlayCircle, RefreshCw, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import {
   Dialog,
   DialogContent,
@@ -97,13 +99,21 @@ export function AdminTutorRequestDetailsPage() {
               onClick={() => {
                 setActionError(null);
                 start.mutate(undefined, {
+                  onSuccess: () => toast.success("Tutor request started successfully."),
                   onError: (err) =>
                     setActionError(describeApiError(err, "Request could not be started.")),
                 });
               }}
+              aria-busy={start.isPending}
             >
-              <PlayCircle className="h-4 w-4" />
-              Start request
+              {start.isPending ? (
+                <ButtonLoading>Starting...</ButtonLoading>
+              ) : (
+                <>
+                  <PlayCircle className="h-4 w-4" />
+                  Start request
+                </>
+              )}
             </Button>
           )}
           {request.status === "in_progress" && (
@@ -113,13 +123,21 @@ export function AdminTutorRequestDetailsPage() {
               onClick={() => {
                 setActionError(null);
                 complete.mutate(undefined, {
+                  onSuccess: () => toast.success("Tutor request completed successfully."),
                   onError: (err) =>
                     setActionError(describeApiError(err, "Request could not be completed.")),
                 });
               }}
+              aria-busy={complete.isPending}
             >
-              <CheckCircle2 className="h-4 w-4" />
-              Complete request
+              {complete.isPending ? (
+                <ButtonLoading>Completing...</ButtonLoading>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Complete request
+                </>
+              )}
             </Button>
           )}
         </section>
@@ -254,13 +272,25 @@ export function AdminTutorRequestDetailsPage() {
                 if (!selectedTutorId) return;
                 setActionError(null);
                 matchTutor.mutate(selectedTutorId, {
-                  onSuccess: () => setMatchOpen(false),
+                  onSuccess: () => {
+                    setMatchOpen(false);
+                    toast.success(
+                      canReassign ? "Tutor changed successfully." : "Tutor matched successfully.",
+                    );
+                  },
                   onError: (err) =>
                     setActionError(describeApiError(err, "Tutor could not be matched.")),
                 });
               }}
+              aria-busy={matchTutor.isPending}
             >
-              {matchTutor.isPending ? "Saving..." : canReassign ? "Change tutor" : "Match tutor"}
+              {matchTutor.isPending ? (
+                <ButtonLoading>Saving...</ButtonLoading>
+              ) : canReassign ? (
+                "Change tutor"
+              ) : (
+                "Match tutor"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

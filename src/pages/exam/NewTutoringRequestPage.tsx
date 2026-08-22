@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { RoleLink } from "@/components/shared/RoleLink";
-import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { describeApiError } from "@/lib/api/errors";
@@ -55,11 +56,9 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function NewTutoringRequestPage() {
-  const navigate = useNavigate();
   const createRequest = useCreateTutorRequest();
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
-  const [submitted, setSubmitted] = useState(false);
 
   const set = (key: keyof Form) => (value: string) => {
     setForm((current) => ({
@@ -68,7 +67,6 @@ export function NewTutoringRequestPage() {
       ...(key === "examType" ? { examLevel: "" } : null),
     }));
     setErrors((current) => ({ ...current, [key]: undefined }));
-    setSubmitted(false);
   };
 
   const levels = EXAM_LEVEL_OPTIONS[form.examType] ?? [];
@@ -100,9 +98,11 @@ export function NewTutoringRequestPage() {
         additional_notes: optional(form.notes),
       });
       setForm(EMPTY);
-      setSubmitted(true);
+      toast.success("Tutoring request submitted.", {
+        description: "You will be notified once a tutor is matched.",
+      });
     } catch {
-      setSubmitted(false);
+      return;
     }
   };
 
@@ -120,26 +120,6 @@ export function NewTutoringRequestPage() {
         title="New tutoring request"
         description="Tell us what you are preparing for and how you prefer to be tutored."
       />
-
-      {submitted && (
-        <div className="mb-6 flex items-start gap-3 bg-success-soft px-5 py-4">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Tutoring request submitted</p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Your request is now under review. You will be notified once a tutor is matched.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3"
-              onClick={() => navigate({ to: "/exam/tutoring" })}
-            >
-              View my tutoring requests
-            </Button>
-          </div>
-        </div>
-      )}
 
       {createRequest.isError && (
         <div className="mb-6 bg-danger-soft px-5 py-4 text-sm text-danger">
@@ -252,8 +232,16 @@ export function NewTutoringRequestPage() {
             <Button asChild variant="outline" type="button">
               <RoleLink to="/tutoring">Cancel</RoleLink>
             </Button>
-            <Button type="submit" disabled={createRequest.isPending}>
-              {createRequest.isPending ? "Submitting…" : "Submit request"}
+            <Button
+              type="submit"
+              disabled={createRequest.isPending}
+              aria-busy={createRequest.isPending}
+            >
+              {createRequest.isPending ? (
+                <ButtonLoading>Submitting...</ButtonLoading>
+              ) : (
+                "Submit request"
+              )}
             </Button>
           </footer>
         </section>

@@ -17,6 +17,8 @@ import {
   fetchAdminProcurements,
   fetchAdminResource,
   fetchAdminResources,
+  fetchAdminUser,
+  fetchAdminUsers,
   fetchAdminTutor,
   fetchAdminTutorRequest,
   fetchAdminTutorRequests,
@@ -35,6 +37,7 @@ import {
   verifyPayment,
   type AdminResourceInput,
   type AdminResourcesParams,
+  type AdminUsersParams,
   type AdminTutorInput,
   type AdminTutorsParams,
   type AdminOrderStatus,
@@ -54,6 +57,8 @@ export const ADMIN_TUTORS_KEY = ["admin", "tutors"];
 export const ADMIN_TUTOR_KEY = ["admin", "tutor"];
 export const ADMIN_RESOURCES_KEY = ["admin", "resources"];
 export const ADMIN_RESOURCE_KEY = ["admin", "resource"];
+export const ADMIN_USERS_KEY = ["admin", "users"];
+export const ADMIN_USER_KEY = ["admin", "user"];
 
 export function useAdminDashboard() {
   return useQuery({
@@ -148,6 +153,23 @@ export function useAdminResources(params: AdminResourcesParams) {
   return useQuery({
     queryKey: [...ADMIN_RESOURCES_KEY, params],
     queryFn: () => fetchAdminResources(params),
+    retry: false,
+  });
+}
+
+export function useAdminUsers(params: AdminUsersParams) {
+  return useQuery({
+    queryKey: [...ADMIN_USERS_KEY, params],
+    queryFn: () => fetchAdminUsers(params),
+    retry: false,
+  });
+}
+
+export function useAdminUser(id: string | number | undefined) {
+  return useQuery({
+    queryKey: [...ADMIN_USER_KEY, String(id)],
+    queryFn: () => fetchAdminUser(id!),
+    enabled: id !== undefined && id !== "",
     retry: false,
   });
 }

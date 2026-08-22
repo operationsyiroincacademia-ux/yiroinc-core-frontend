@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { Bell, Check, CheckCheck, ExternalLink, X } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { isRead, type Notification } from "@/features/notifications/api";
 import {
   useDismissNotification,
@@ -25,6 +27,7 @@ const FILTERS = ["All", "Unread", "Read"] as const;
  */
 export function NotificationsPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [activeNotificationAction, setActiveNotificationAction] = useState<string | null>(null);
   const navigate = useNavigate();
   const experience = useExperience();
   const { data, isLoading, isError, error } = useNotifications(1, 50);
@@ -76,11 +79,24 @@ export function NotificationsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => markAllRead.mutate()}
+            aria-busy={markAllRead.isPending}
+            onClick={() =>
+              markAllRead.mutate(undefined, {
+                onSuccess: () => toast.success("All notifications marked as read."),
+                onError: (err) =>
+                  toast.error(describeApiError(err, "Notifications could not be updated.")),
+              })
+            }
             disabled={unreadCount === 0 || markAllRead.isPending}
           >
-            <CheckCheck className="h-4 w-4" strokeWidth={2} />
-            {markAllRead.isPending ? "Marking…" : "Mark all as read"}
+            {markAllRead.isPending ? (
+              <ButtonLoading>Marking...</ButtonLoading>
+            ) : (
+              <>
+                <CheckCheck className="h-4 w-4" strokeWidth={2} />
+                Mark all as read
+              </>
+            )}
           </Button>
         </div>
       )}
@@ -180,23 +196,57 @@ export function NotificationsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => markRead.mutate(item.id)}
+                      onClick={() => {
+                        setActiveNotificationAction(`read-${item.id}`);
+                        markRead.mutate(item.id, {
+                          onSuccess: () => toast.success("Notification marked as read."),
+                          onError: (err) =>
+                            toast.error(
+                              describeApiError(err, "Notification could not be marked as read."),
+                            ),
+                          onSettled: () => setActiveNotificationAction(null),
+                        });
+                      }}
                       disabled={markRead.isPending}
+                      aria-busy={activeNotificationAction === `read-${item.id}`}
                       aria-label={`Mark "${item.title}" as read`}
                     >
-                      <Check className="h-4 w-4" strokeWidth={2} />
-                      Mark as read
+                      {activeNotificationAction === `read-${item.id}` ? (
+                        <ButtonLoading>Marking...</ButtonLoading>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4" strokeWidth={2} />
+                          Mark as read
+                        </>
+                      )}
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => dismiss.mutate(item.id)}
+                    onClick={() => {
+                      setActiveNotificationAction(`dismiss-${item.id}`);
+                      dismiss.mutate(item.id, {
+                        onSuccess: () => toast.success("Notification dismissed."),
+                        onError: (err) =>
+                          toast.error(
+                            describeApiError(err, "Notification could not be dismissed."),
+                          ),
+                        onSettled: () => setActiveNotificationAction(null),
+                      });
+                    }}
                     disabled={dismiss.isPending}
+                    aria-busy={activeNotificationAction === `dismiss-${item.id}`}
                     aria-label={`Dismiss "${item.title}"`}
                   >
-                    <X className="h-4 w-4" strokeWidth={2} />
-                    Dismiss
+                    {activeNotificationAction === `dismiss-${item.id}` ? (
+                      <ButtonLoading>Dismissing...</ButtonLoading>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4" strokeWidth={2} />
+                        Dismiss
+                      </>
+                    )}
                   </Button>
                 </div>
               </li>

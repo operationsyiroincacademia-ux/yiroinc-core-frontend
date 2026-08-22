@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusTone } from "@/components/ui/status-badge";
 import { formatDateTime, humaniseStatus } from "@/features/commerce/format";
@@ -39,13 +41,21 @@ export function AdminProcurementDetailsPage() {
             onClick={() => {
               setActionError(null);
               deliver.mutate(undefined, {
+                onSuccess: () => toast.success("Procurement marked as delivered."),
                 onError: (err) =>
                   setActionError(describeApiError(err, "Procurement could not be delivered.")),
               });
             }}
+            aria-busy={deliver.isPending}
           >
-            <CheckCircle2 className="h-4 w-4" />
-            Mark delivered
+            {deliver.isPending ? (
+              <ButtonLoading>Marking...</ButtonLoading>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Mark delivered
+              </>
+            )}
           </Button>
         </section>
       )}

@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -73,6 +74,7 @@ export function AdminTutorDetailsPage() {
         error={updateTutor.error}
         onSubmit={async (input) => {
           await updateTutor.mutateAsync(input);
+          toast.success("Tutor updated successfully.");
         }}
       />
     </AdminLayout>

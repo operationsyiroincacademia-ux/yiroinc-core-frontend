@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useCreateAdminResource } from "@/features/admin/hooks";
@@ -27,6 +28,7 @@ export function AdminNewResourcePage() {
         error={createResource.error}
         onSubmit={async (input) => {
           const resource = await createResource.mutateAsync(input);
+          toast.success("Resource created successfully.");
           await navigate({
             to: resource?.id ? "/admin/resources/$resourceId" : "/admin/resources",
             params: resource?.id ? { resourceId: String(resource.id) } : undefined,

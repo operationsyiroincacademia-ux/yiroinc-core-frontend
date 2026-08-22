@@ -14,6 +14,7 @@ import type { TutorRequest } from "@/features/tutoring/api";
 import type { ConsultingRequest, Procurement } from "@/features/corporate/api";
 import type { Resource, ResourceSourceType } from "@/features/resources/api";
 import type { ResourceAudience } from "@/features/resources/api";
+import type { ProfileType } from "@/lib/roles";
 
 export type AdminDashboardSummary = {
   users: string | number;
@@ -53,6 +54,52 @@ export type AdminOrderStatus = "all" | "awaiting_payment" | "paid" | "completed"
 export type AdminRequestKind = "tutor" | "consulting" | "procurement";
 export type TutorAvailability = "available" | "unavailable";
 export type TutorStatus = "active" | "inactive";
+export type AdminUserProfileType = ProfileType | "all";
+
+export type AdminUser = {
+  id: string | number;
+  display_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  profile_type?: ProfileType | string | null;
+  phone?: string | null;
+  organization_name?: string | null;
+  exam_type?: string | null;
+  exam_level?: string | null;
+  institution?: string | null;
+  country?: string | null;
+  registered_at?: string | null;
+  created_at?: string | null;
+};
+
+export type AdminUsersParams = {
+  search?: string;
+  profileType?: AdminUserProfileType;
+  page?: number;
+  perPage?: number;
+};
+
+export type AdminUsersResponse = {
+  users: AdminUser[];
+  pagination: Pagination | null;
+};
+
+export type AdminUserRequests = {
+  tutor: Record<string, unknown>[];
+  consulting: Record<string, unknown>[];
+  procurement: Record<string, unknown>[];
+};
+
+export type AdminUserDetail = {
+  user: AdminUser;
+  profile: Record<string, unknown>;
+  summary: Record<string, string | number>;
+  orders: Order[];
+  payments: Payment[];
+  requests: AdminUserRequests;
+  resources: Resource[];
+};
 
 export type AdminTutor = {
   id: string | number;
@@ -381,6 +428,52 @@ function tutorQueryString(params: AdminTutorsParams = {}) {
   if (params.examExpertise) query.set("exam_expertise", params.examExpertise);
   if (params.level) query.set("level", params.level);
   return query.toString();
+}
+
+function adminUsersQueryString(params: AdminUsersParams = {}) {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 1),
+    per_page: String(params.perPage ?? 20),
+  });
+  const search = params.search?.trim();
+  if (search) query.set("search", search);
+  if (params.profileType && params.profileType !== "all") {
+    query.set("profile_type", params.profileType);
+  }
+  return query.toString();
+}
+
+export async function fetchAdminUsers(params: AdminUsersParams = {}): Promise<AdminUsersResponse> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(
+    `/admin/users?${adminUsersQueryString(params)}`,
+    { token: token() },
+  );
+  return {
+    users: pickList<AdminUser>(res.data, "users"),
+    pagination: pickPagination(res.data),
+  };
+}
+
+export async function fetchAdminUser(id: string | number): Promise<AdminUserDetail | null> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/users/${id}`, { token: token() });
+  const data = recordOf(res.data);
+  const user = pickRecord<AdminUser>(data, "user");
+  if (!user) return null;
+  const requests = recordOf(data.requests);
+
+  return {
+    user,
+    profile: recordOf(data.profile),
+    summary: countRecord(data.summary),
+    orders: arrayOf<Order>(data.orders),
+    payments: arrayOf<Payment>(data.payments),
+    requests: {
+      tutor: arrayOf<Record<string, unknown>>(requests.tutor),
+      consulting: arrayOf<Record<string, unknown>>(requests.consulting),
+      procurement: arrayOf<Record<string, unknown>>(requests.procurement),
+    },
+    resources: arrayOf<Resource>(data.resources),
+  };
 }
 
 function adminResourcesQueryString(params: AdminResourcesParams = {}) {

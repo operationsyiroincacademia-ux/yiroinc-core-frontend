@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Building2, CheckCircle2, Copy, FileText, Info, Upload } from "lucide-react";
+import { ArrowLeft, Building2, Copy, FileText, Info, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { RoleLink } from "@/components/shared/RoleLink";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { describeApiError, type UploadedProof } from "@/features/commerce/api";
 import {
@@ -153,6 +155,9 @@ export function CheckoutPage() {
         file,
       });
       setResult(uploaded);
+      toast.success("Proof of payment uploaded successfully.", {
+        description: "An administrator will verify your transfer manually.",
+      });
     } catch (error) {
       setSubmitError(
         describeApiError(error, "Your proof of payment could not be submitted. Please try again."),
@@ -170,17 +175,8 @@ export function CheckoutPage() {
         <PageHeader title="Proof of payment received" description={result.message} />
 
         <section className="border border-border bg-card">
-          <div className="border-b border-border bg-success-soft px-5 py-5">
-            <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-              Proof of payment uploaded successfully
-            </p>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {file?.name ?? "Receipt"} was attached to this payment record.
-            </p>
-          </div>
-
           <div className="divide-y divide-border">
+            <Row label="Uploaded file" value={file?.name ?? "Receipt"} />
             <Row label="Order reference" value={orderNumber} />
             <Row label="Item" value={order.product_name_snapshot} />
             <Row label="Amount" value={totalLabel} />
@@ -390,8 +386,13 @@ export function CheckoutPage() {
               <p className="mt-3 bg-danger-soft px-3 py-2.5 text-xs text-danger">{fileError}</p>
             )}
 
-            <Button className="mt-5 w-full" disabled={!file || submitting} onClick={submit}>
-              {submitting ? "Uploading…" : "Upload proof of payment"}
+            <Button
+              className="mt-5 w-full"
+              disabled={!file || submitting}
+              aria-busy={submitting}
+              onClick={submit}
+            >
+              {submitting ? <ButtonLoading>Uploading...</ButtonLoading> : "Upload proof of payment"}
             </Button>
 
             {submitError && (

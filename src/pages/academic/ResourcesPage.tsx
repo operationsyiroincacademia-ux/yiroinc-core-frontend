@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { BookOpen, Download, ExternalLink, Search, ShoppingCart } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useCreateOrder } from "@/features/commerce/hooks";
@@ -110,6 +112,7 @@ export function ResourcesPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      toast.success("Resource download started.");
     } catch (err) {
       setDownloadError(describeApiError(err, "This resource could not be downloaded."));
     } finally {
@@ -126,6 +129,7 @@ export function ResourcesPage() {
       { orderSource: "resource", resourceId: resource.id },
       {
         onSuccess: (order) => {
+          toast.success("Resource order created successfully.");
           navigate({
             to: roleHref(experience, `/checkout/${order.order_id}`),
           });
@@ -293,9 +297,16 @@ export function ResourcesPage() {
                             size="sm"
                             onClick={() => handleAction(resource)}
                             disabled={activeDownload === resource.id}
+                            aria-busy={activeDownload === resource.id}
                           >
-                            <Download className="h-4 w-4" strokeWidth={2} />
-                            {activeDownload === resource.id ? "Downloading…" : "Download"}
+                            {activeDownload === resource.id ? (
+                              <ButtonLoading>Downloading...</ButtonLoading>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4" strokeWidth={2} />
+                                Download
+                              </>
+                            )}
                           </Button>
                         )}
                         {action === "open" && (
@@ -314,9 +325,16 @@ export function ResourcesPage() {
                             size="sm"
                             onClick={() => handleBuy(resource)}
                             disabled={createOrder.isPending || activePurchase === resource.id}
+                            aria-busy={activePurchase === resource.id}
                           >
-                            <ShoppingCart className="h-4 w-4" strokeWidth={2} />
-                            {activePurchase === resource.id ? "Creating order…" : "Buy"}
+                            {activePurchase === resource.id ? (
+                              <ButtonLoading>Creating order...</ButtonLoading>
+                            ) : (
+                              <>
+                                <ShoppingCart className="h-4 w-4" strokeWidth={2} />
+                                Buy
+                              </>
+                            )}
                           </Button>
                         )}
                       </div>

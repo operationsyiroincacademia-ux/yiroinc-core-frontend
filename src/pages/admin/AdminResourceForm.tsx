@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -385,8 +386,8 @@ export function AdminResourceForm({
         </div>
 
         <footer className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-4">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving..." : submitLabel}
+          <Button type="submit" disabled={pending} aria-busy={pending}>
+            {pending ? <ButtonLoading>Saving...</ButtonLoading> : submitLabel}
           </Button>
         </footer>
       </section>

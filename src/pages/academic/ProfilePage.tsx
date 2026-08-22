@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -46,7 +48,7 @@ function nullable(value: string): string | null {
 export function ProfilePage() {
   const [form, setForm] = useState<Editable>(EMPTY_FORM);
   const [errors, setErrors] = useState<Errors>({});
-  const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const profileQuery = useProfile();
   const updateProfile = useUpdateProfile();
@@ -110,7 +112,7 @@ export function ProfilePage() {
       setStatus("idle");
       setSaveError(null);
       await updateProfile.mutateAsync(payload);
-      setStatus("saved");
+      toast.success("Profile updated successfully.");
     } catch (error) {
       setStatus("error");
       setSaveError(describeApiError(error, "Your profile could not be updated."));
@@ -144,13 +146,6 @@ export function ProfilePage() {
                 Update the fields below and save your changes.
               </p>
             </div>
-
-            {status === "saved" && (
-              <div className="flex items-start gap-2.5 border-b border-border bg-success-soft px-5 py-3.5">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
-                <p className="text-sm text-success">Your profile has been updated.</p>
-              </div>
-            )}
 
             {status === "error" && (
               <div className="flex items-start gap-2.5 border-b border-border bg-danger-soft px-5 py-3.5">
@@ -231,8 +226,16 @@ export function ProfilePage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
-              <Button type="submit" disabled={updateProfile.isPending}>
-                {updateProfile.isPending ? "Saving…" : "Save changes"}
+              <Button
+                type="submit"
+                disabled={updateProfile.isPending}
+                aria-busy={updateProfile.isPending}
+              >
+                {updateProfile.isPending ? (
+                  <ButtonLoading>Saving...</ButtonLoading>
+                ) : (
+                  "Save changes"
+                )}
               </Button>
             </div>
           </form>

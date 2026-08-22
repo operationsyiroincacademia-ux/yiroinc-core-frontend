@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, PlayCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusTone } from "@/components/ui/status-badge";
 import { formatDateTime, formatMoney, humaniseStatus, toNumber } from "@/features/commerce/format";
@@ -45,13 +47,21 @@ export function AdminConsultingRequestDetailsPage() {
               onClick={() => {
                 setActionError(null);
                 start.mutate(undefined, {
+                  onSuccess: () => toast.success("Consulting request started successfully."),
                   onError: (err) =>
                     setActionError(describeApiError(err, "Request could not be started.")),
                 });
               }}
+              aria-busy={start.isPending}
             >
-              <PlayCircle className="h-4 w-4" />
-              Start request
+              {start.isPending ? (
+                <ButtonLoading>Starting...</ButtonLoading>
+              ) : (
+                <>
+                  <PlayCircle className="h-4 w-4" />
+                  Start request
+                </>
+              )}
             </Button>
           )}
           {request.status === "in_progress" && (
@@ -61,13 +71,21 @@ export function AdminConsultingRequestDetailsPage() {
               onClick={() => {
                 setActionError(null);
                 complete.mutate(undefined, {
+                  onSuccess: () => toast.success("Consulting request completed successfully."),
                   onError: (err) =>
                     setActionError(describeApiError(err, "Request could not be completed.")),
                 });
               }}
+              aria-busy={complete.isPending}
             >
-              <CheckCircle2 className="h-4 w-4" />
-              Complete request
+              {complete.isPending ? (
+                <ButtonLoading>Completing...</ButtonLoading>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Complete request
+                </>
+              )}
             </Button>
           )}
         </section>

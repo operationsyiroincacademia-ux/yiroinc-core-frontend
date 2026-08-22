@@ -1,8 +1,23 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { LogOut } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { navigationFor } from "@/lib/roles/navigation";
-import { EXPERIENCE_LABEL, type Experience } from "@/lib/roles";
+import { type Experience } from "@/lib/roles";
+import { useAuth } from "@/lib/auth/auth-context";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
 
 type SidebarNavProps = {
   experience: Experience;
@@ -10,6 +25,9 @@ type SidebarNavProps = {
 };
 
 export function SidebarNav({ experience, onNavigate }: SidebarNavProps) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = useRouterState({
     select: (router) => router.location.pathname,
   });
@@ -75,13 +93,45 @@ export function SidebarNav({ experience, onNavigate }: SidebarNavProps) {
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-border px-5 py-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.09em] text-muted-foreground">
-          Signed in as
-        </p>
-        <p className="mt-1 text-sm font-semibold text-foreground">
-          {EXPERIENCE_LABEL[experience]}
-        </p>
+      <div className="shrink-0 border-t border-border px-3 py-4">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              type="button"
+              className="relative flex w-full items-center gap-3.5 px-3 py-3 text-left text-sm font-medium text-danger transition-colors hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-transparent"
+            >
+              <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.9} />
+              <span className="truncate">Logout</span>
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Log out?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to log out of your account?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className={buttonVariants({ variant: "destructive" })}
+                disabled={isSigningOut}
+                onClick={async () => {
+                  setIsSigningOut(true);
+                  try {
+                    await signOut();
+                    onNavigate?.();
+                    navigate({ to: "/login", replace: true });
+                  } finally {
+                    setIsSigningOut(false);
+                  }
+                }}
+              >
+                {isSigningOut ? "Logging out..." : "Log out"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

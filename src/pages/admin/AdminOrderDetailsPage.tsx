@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileText, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import {
   Dialog,
   DialogContent,
@@ -123,6 +125,7 @@ export function AdminOrderDetailsPage() {
       onSuccess: () => {
         setRejectOpen(false);
         setRejectionReason("");
+        toast.success("Payment rejected successfully.");
       },
       onError: (err) => setActionError(describeApiError(err, "Payment could not be rejected.")),
     });
@@ -133,6 +136,7 @@ export function AdminOrderDetailsPage() {
     fulfilOrder.mutate(undefined, {
       onSuccess: () => {
         setFulfilOpen(false);
+        toast.success("Order fulfilled successfully.");
       },
       onError: (err) => setActionError(describeApiError(err, "Order could not be fulfilled.")),
     });
@@ -170,13 +174,21 @@ export function AdminOrderDetailsPage() {
                 onClick={() => {
                   setActionError(null);
                   approvePayment.mutate(undefined, {
+                    onSuccess: () => toast.success("Payment approved successfully."),
                     onError: (err) =>
                       setActionError(describeApiError(err, "Payment could not be approved.")),
                   });
                 }}
+                aria-busy={approvePayment.isPending}
               >
-                <CheckCircle2 className="h-4 w-4" />
-                {approvePayment.isPending ? "Approving..." : "Approve payment"}
+                {approvePayment.isPending ? (
+                  <ButtonLoading>Approving...</ButtonLoading>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Approve payment
+                  </>
+                )}
               </Button>
               <Button
                 type="button"
@@ -197,6 +209,7 @@ export function AdminOrderDetailsPage() {
               type="button"
               variant="outline"
               disabled={fulfilOrder.isPending}
+              aria-busy={fulfilOrder.isPending}
               onClick={() => {
                 setActionError(null);
                 setFulfilOpen(true);
@@ -253,20 +266,34 @@ export function AdminOrderDetailsPage() {
                       variant="outline"
                       size="sm"
                       disabled={activeProofAction !== null}
+                      aria-busy={activeProofAction === "open"}
                       onClick={() => void openProof("open")}
                     >
-                      <ExternalLink className="h-4 w-4" />
-                      {activeProofAction === "open" ? "Opening..." : "View/Open"}
+                      {activeProofAction === "open" ? (
+                        <ButtonLoading>Opening...</ButtonLoading>
+                      ) : (
+                        <>
+                          <ExternalLink className="h-4 w-4" />
+                          View/Open
+                        </>
+                      )}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       disabled={activeProofAction !== null}
+                      aria-busy={activeProofAction === "download"}
                       onClick={() => void openProof("download")}
                     >
-                      <Download className="h-4 w-4" />
-                      {activeProofAction === "download" ? "Downloading..." : "Download"}
+                      {activeProofAction === "download" ? (
+                        <ButtonLoading>Downloading...</ButtonLoading>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" />
+                          Download
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -348,9 +375,14 @@ export function AdminOrderDetailsPage() {
               type="button"
               variant="destructive"
               disabled={rejectPayment.isPending}
+              aria-busy={rejectPayment.isPending}
               onClick={submitReject}
             >
-              {rejectPayment.isPending ? "Rejecting..." : "Reject payment"}
+              {rejectPayment.isPending ? (
+                <ButtonLoading>Rejecting...</ButtonLoading>
+              ) : (
+                "Reject payment"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -375,8 +407,17 @@ export function AdminOrderDetailsPage() {
             >
               Cancel
             </Button>
-            <Button type="button" disabled={fulfilOrder.isPending} onClick={confirmFulfil}>
-              {fulfilOrder.isPending ? "Fulfilling..." : "Confirm fulfilment"}
+            <Button
+              type="button"
+              disabled={fulfilOrder.isPending}
+              aria-busy={fulfilOrder.isPending}
+              onClick={confirmFulfil}
+            >
+              {fulfilOrder.isPending ? (
+                <ButtonLoading>Fulfilling...</ButtonLoading>
+              ) : (
+                "Confirm fulfilment"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

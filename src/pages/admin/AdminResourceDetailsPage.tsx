@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -13,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   useAdminResource,
@@ -115,6 +117,7 @@ export function AdminResourceDetailsPage() {
         error={updateResource.error}
         onSubmit={async (input) => {
           await updateResource.mutateAsync(input);
+          toast.success("Resource updated successfully.");
         }}
       />
 
@@ -133,8 +136,17 @@ export function AdminResourceDetailsPage() {
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button type="button" variant="destructive" disabled={removeResource.isPending}>
-                Remove resource
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={removeResource.isPending}
+                aria-busy={removeResource.isPending}
+              >
+                {removeResource.isPending ? (
+                  <ButtonLoading>Removing...</ButtonLoading>
+                ) : (
+                  "Remove resource"
+                )}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -148,12 +160,23 @@ export function AdminResourceDetailsPage() {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={async () => {
-                    await removeResource.mutateAsync();
-                    await navigate({ to: "/admin/resources" });
+                  disabled={removeResource.isPending}
+                  aria-busy={removeResource.isPending}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    removeResource.mutate(undefined, {
+                      onSuccess: () => {
+                        toast.success("Resource removed successfully.");
+                        void navigate({ to: "/admin/resources" });
+                      },
+                    });
                   }}
                 >
-                  Remove resource
+                  {removeResource.isPending ? (
+                    <ButtonLoading>Removing...</ButtonLoading>
+                  ) : (
+                    "Remove resource"
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

@@ -10,8 +10,10 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import {
   Dialog,
   DialogContent,
@@ -131,6 +133,7 @@ export function AdminPaymentDetailsPage() {
       onSuccess: () => {
         setRejectOpen(false);
         setRejectionReason("");
+        toast.success("Payment rejected successfully.");
       },
       onError: (err) => {
         setActionError(describeApiError(err, "Payment could not be rejected."));
@@ -168,14 +171,22 @@ export function AdminPaymentDetailsPage() {
             onClick={() => {
               setActionError(null);
               verifyPayment.mutate(undefined, {
+                onSuccess: () => toast.success("Payment approved successfully."),
                 onError: (err) => {
                   setActionError(describeApiError(err, "Payment could not be approved."));
                 },
               });
             }}
+            aria-busy={verifyPayment.isPending}
           >
-            <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-            {verifyPayment.isPending ? "Approving..." : "Approve payment"}
+            {verifyPayment.isPending ? (
+              <ButtonLoading>Approving...</ButtonLoading>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                Approve payment
+              </>
+            )}
           </Button>
           <Button
             type="button"
@@ -240,20 +251,34 @@ export function AdminPaymentDetailsPage() {
                       variant="outline"
                       size="sm"
                       disabled={activeProofAction !== null}
+                      aria-busy={activeProofAction === "open"}
                       onClick={() => void openProof("open")}
                     >
-                      <ExternalLink className="h-4 w-4" strokeWidth={2} />
-                      {activeProofAction === "open" ? "Opening..." : "View/Open"}
+                      {activeProofAction === "open" ? (
+                        <ButtonLoading>Opening...</ButtonLoading>
+                      ) : (
+                        <>
+                          <ExternalLink className="h-4 w-4" strokeWidth={2} />
+                          View/Open
+                        </>
+                      )}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       disabled={activeProofAction !== null}
+                      aria-busy={activeProofAction === "download"}
                       onClick={() => void openProof("download")}
                     >
-                      <Download className="h-4 w-4" strokeWidth={2} />
-                      {activeProofAction === "download" ? "Downloading..." : "Download"}
+                      {activeProofAction === "download" ? (
+                        <ButtonLoading>Downloading...</ButtonLoading>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" strokeWidth={2} />
+                          Download
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -315,9 +340,14 @@ export function AdminPaymentDetailsPage() {
               type="button"
               variant="destructive"
               disabled={rejectPayment.isPending}
+              aria-busy={rejectPayment.isPending}
               onClick={submitReject}
             >
-              {rejectPayment.isPending ? "Rejecting..." : "Reject payment"}
+              {rejectPayment.isPending ? (
+                <ButtonLoading>Rejecting...</ButtonLoading>
+              ) : (
+                "Reject payment"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

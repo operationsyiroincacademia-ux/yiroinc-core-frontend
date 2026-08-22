@@ -1,9 +1,11 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ImageIcon, Info } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { RoleLink } from "@/components/shared/RoleLink";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
 import { describeApiError, type Product } from "@/features/commerce/api";
 import { useCreateOrder, useProduct } from "@/features/commerce/hooks";
 import { formatMoney } from "@/features/commerce/format";
@@ -51,6 +53,7 @@ export function ProductDetailsPage() {
       { productId: product.id, quantity: 1 },
       {
         onSuccess: (order) => {
+          toast.success("Order created successfully.");
           navigate({
             to: roleHref(experience, `/checkout/${order.order_id}`),
           });
@@ -117,8 +120,17 @@ export function ProductDetailsPage() {
             <p className="mt-1 text-xs text-muted-foreground">Quantity: 1</p>
           </div>
           <div className="px-5 py-5">
-            <Button className="w-full" disabled={createOrder.isPending} onClick={placeOrder}>
-              {createOrder.isPending ? "Placing order…" : "Place order"}
+            <Button
+              className="w-full"
+              disabled={createOrder.isPending}
+              aria-busy={createOrder.isPending}
+              onClick={placeOrder}
+            >
+              {createOrder.isPending ? (
+                <ButtonLoading>Placing order...</ButtonLoading>
+              ) : (
+                "Place order"
+              )}
             </Button>
 
             {createOrder.isError && (

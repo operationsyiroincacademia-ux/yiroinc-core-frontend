@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { SidebarNav } from "./SidebarNav";
 import { Topbar } from "./Topbar";
+import { Toaster } from "@/components/ui/sonner";
 import { useCurrentUser } from "@/lib/auth/current-user";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -22,6 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
         </div>
       </div>
+      <Toaster closeButton duration={4500} position="top-right" />
     </div>
   );
 }

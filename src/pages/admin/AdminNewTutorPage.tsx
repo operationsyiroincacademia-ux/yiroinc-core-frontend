@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useCreateAdminTutor } from "@/features/admin/hooks";
@@ -20,6 +21,7 @@ export function AdminNewTutorPage() {
         error={createTutor.error}
         onSubmit={async (input) => {
           const tutor = await createTutor.mutateAsync(input);
+          toast.success("Tutor created successfully.");
           if (tutor?.id) {
             await navigate({ to: "/admin/tutors/$tutorId", params: { tutorId: String(tutor.id) } });
           } else {
