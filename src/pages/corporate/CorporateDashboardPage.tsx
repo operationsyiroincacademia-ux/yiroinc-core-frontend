@@ -2,7 +2,7 @@ import { ShoppingBag, CreditCard, Bell, Briefcase, ArrowRight, Upload } from "lu
 
 import { RoleLink } from "@/components/shared/RoleLink";
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
-import { SectionCard, EmptyState } from "@/components/shared/DashboardCard";
+import { DashboardStatCard, SectionCard, EmptyState } from "@/components/shared/DashboardCard";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/lib/auth/current-user";
 import { useCorporateDashboard } from "@/features/dashboard/hooks";
@@ -94,21 +94,7 @@ export function CorporateDashboardPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summary.map((item) => (
-              <RoleLink
-                key={item.label}
-                to={item.to}
-                className="border border-border bg-card p-5 transition-colors hover:border-primary/30"
-              >
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <item.icon className="h-4 w-4" strokeWidth={1.9} />
-                  <span className="text-xs font-semibold uppercase tracking-[0.07em]">
-                    {item.label}
-                  </span>
-                </div>
-                <p className="mt-3 text-3xl font-extrabold tracking-tight text-foreground">
-                  {item.value}
-                </p>
-              </RoleLink>
+              <DashboardStatCard key={item.label} {...item} />
             ))}
           </div>
 

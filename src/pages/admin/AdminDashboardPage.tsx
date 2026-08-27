@@ -13,6 +13,7 @@ import { timelineText, timelineTime } from "@/features/dashboard/derive";
 import { useAdminDashboard } from "@/features/admin/hooks";
 import { AdminLayout, PageHeader } from "@/layouts/AdminLayout/AdminLayout";
 import { describeApiError } from "@/lib/api/errors";
+import { cn } from "@/lib/utils";
 import {
   Bell,
   BookOpen,
@@ -24,6 +25,20 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+
+const adminIconToneByLabel: Record<string, string> = {
+  users: "bg-primary-soft text-primary",
+  "orders requiring attention": "bg-info-soft text-info",
+  "payments awaiting approval": "bg-success-soft text-success",
+  resources: "bg-accent-soft text-accent",
+  "tutoring requests": "bg-purple-50 text-purple-700",
+  "consulting requests": "bg-info-soft text-info",
+  "procurement requests": "bg-warning-soft text-warning",
+};
+
+function adminIconTone(label: string) {
+  return adminIconToneByLabel[label.toLowerCase()] ?? "bg-primary-soft text-primary";
+}
 
 /**
  * Admin dashboard home. Data comes from GET /admin/dashboard only.
@@ -125,8 +140,8 @@ export function AdminDashboardPage() {
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {requestOverview.map((item) => (
                   <div key={item.label} className="bg-card px-4 py-3">
-                    <div className="flex items-center gap-2.5 text-muted-foreground">
-                      <item.icon className="h-4 w-4" strokeWidth={1.9} />
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <AdminIconBadge label={item.label} icon={item.icon} />
                       <span className="text-xs font-semibold uppercase tracking-[0.07em]">
                         {item.label}
                       </span>
@@ -222,13 +237,23 @@ function SummaryCard({
 }) {
   return (
     <article className="border border-border bg-card p-5">
-      <div className="flex items-center gap-2.5 text-muted-foreground">
-        <Icon className="h-4 w-4" strokeWidth={1.9} />
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <AdminIconBadge label={label} icon={Icon} />
         <span className="text-xs font-semibold uppercase tracking-[0.07em]">{label}</span>
       </div>
       <p className="mt-3 text-3xl font-extrabold tracking-tight text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
     </article>
+  );
+}
+
+function AdminIconBadge({ label, icon: Icon }: { label: string; icon: LucideIcon }) {
+  return (
+    <span
+      className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-sm", adminIconTone(label))}
+    >
+      <Icon className="h-4 w-4" strokeWidth={1.9} />
+    </span>
   );
 }
 

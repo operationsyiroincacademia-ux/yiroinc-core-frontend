@@ -30,7 +30,7 @@ export function Topbar({ user }: { user: CurrentUser }) {
         </SheetContent>
       </Sheet>
 
-      <div className="ml-auto flex shrink-0 items-center gap-1.5">
+      <div className="ml-auto flex min-w-0 items-center gap-1.5">
         <button
           type="button"
           aria-label="Notifications"
@@ -47,7 +47,7 @@ export function Topbar({ user }: { user: CurrentUser }) {
           <span className="grid h-9 w-9 shrink-0 place-items-center bg-primary-soft text-xs font-bold text-primary">
             {initialsOf(user.displayName)}
           </span>
-          <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+          <span className="hidden min-w-0 max-w-44 flex-col leading-tight md:flex lg:max-w-56">
             <span className="truncate text-sm font-semibold text-foreground">
               {user.displayName}
             </span>

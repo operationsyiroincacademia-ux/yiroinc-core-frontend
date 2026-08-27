@@ -34,7 +34,21 @@ export default defineConfig(({ command }) => ({
               serverDir: "dist/server",
               publicDir: "dist/client",
             },
-            cloudflare: { nodeCompat: true, deployConfig: true },
+            cloudflare: {
+              nodeCompat: true,
+              deployConfig: true,
+              wrangler: {
+                name: "yiroinc-core-frontend",
+                workers_dev: true,
+                preview_urls: true,
+                routes: [
+                  {
+                    pattern: "portal.yiroincacademia.com",
+                    custom_domain: true,
+                  },
+                ],
+              },
+            },
           }),
         ]
       : []),

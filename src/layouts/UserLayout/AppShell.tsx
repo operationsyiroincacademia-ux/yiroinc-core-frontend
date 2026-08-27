@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar user={user} />
-          <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+          <main className="min-w-0 flex-1 px-3 py-6 sm:px-6 sm:py-10">{children}</main>
         </div>
       </div>
       <Toaster closeButton duration={4500} position="top-right" />
@@ -38,14 +38,18 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-8 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="truncate text-2xl font-extrabold tracking-tight text-foreground sm:text-[28px]">
+    <header className="mb-6 flex flex-col items-start gap-4 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="min-w-0 max-w-full">
+        <h1 className="break-words text-2xl font-extrabold tracking-tight text-foreground sm:text-[28px]">
           {title}
         </h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex w-full max-w-sm items-center gap-2 sm:w-auto sm:max-w-none sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }
