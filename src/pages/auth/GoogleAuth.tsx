@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import type { GoogleCustomerProfileType } from "@/features/auth/api";
 import { ApiError } from "@/lib/api/client";
-import { describeApiError } from "@/lib/api/errors";
+import { describeApiError, isClosedAccountError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-context";
 import type { Experience } from "@/lib/roles";
 
@@ -70,6 +70,9 @@ const GOOGLE_SETUP_EXAM_OPTIONS: { label: string; value: GoogleSetupExamType }[]
 ];
 
 function describeGoogleError(error: unknown, fallback: string): string {
+  if (isClosedAccountError(error)) {
+    return "This account has been closed and can no longer be accessed.";
+  }
   if (error instanceof ApiError) {
     if (error.status === 400 || error.status === 401) {
       return "Google authentication could not be verified. Please restart Google sign-in.";
