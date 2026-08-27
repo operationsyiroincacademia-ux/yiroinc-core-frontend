@@ -36,6 +36,10 @@ export type UpdateProfileInput = {
   country?: string | null;
 };
 
+export type DeleteAccountInput = {
+  confirmation: "DELETE";
+};
+
 function token() {
   return getAuthToken();
 }
@@ -50,6 +54,15 @@ export async function fetchProfile() {
 export async function updateProfile(input: UpdateProfileInput) {
   const res = await apiRequest<ApiEnvelope<{ message?: string }>>("/profiles", {
     method: "PATCH",
+    token: token(),
+    body: input,
+  });
+  return res.data;
+}
+
+export async function deleteAccount(input: DeleteAccountInput) {
+  const res = await apiRequest<ApiEnvelope<{ message?: string }>>("/auth/account", {
+    method: "DELETE",
     token: token(),
     body: input,
   });

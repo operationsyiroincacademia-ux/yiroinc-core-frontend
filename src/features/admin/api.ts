@@ -15,6 +15,7 @@ import type { ConsultingRequest, Procurement } from "@/features/corporate/api";
 import type { Resource, ResourceSourceType } from "@/features/resources/api";
 import type { ResourceAudience } from "@/features/resources/api";
 import type { ProfileType } from "@/lib/roles";
+import type { BankAccount } from "@/features/commerce/api";
 
 export type AdminDashboardSummary = {
   users: string | number;
@@ -63,6 +64,8 @@ export type AdminUser = {
   last_name?: string | null;
   email?: string | null;
   profile_type?: ProfileType | string | null;
+  account_status?: "active" | "closed" | string | null;
+  closed_at?: string | null;
   phone?: string | null;
   organization_name?: string | null;
   exam_type?: string | null;
@@ -83,6 +86,10 @@ export type AdminUsersParams = {
 export type AdminUsersResponse = {
   users: AdminUser[];
   pagination: Pagination | null;
+};
+
+export type CloseAdminUserInput = {
+  reason: string;
 };
 
 export type AdminUserRequests = {
@@ -272,6 +279,14 @@ export type AdminPaymentDetails = {
   activity: PaymentActivity[];
 };
 
+export type AdminSettings = {
+  bank_account: BankAccount;
+};
+
+export type AdminSettingsInput = {
+  bank_account: Pick<BankAccount, "account_name" | "account_number" | "bank_name" | "currency">;
+};
+
 function token() {
   return getAuthToken();
 }
@@ -377,6 +392,36 @@ export async function fetchAdminDashboard(): Promise<AdminDashboard> {
   };
 }
 
+function bankAccountOf(value: unknown): BankAccount {
+  const record = recordOf(value);
+  return {
+    account_name: typeof record.account_name === "string" ? record.account_name : "",
+    account_number: record.account_number != null ? String(record.account_number) : "",
+    bank_name: typeof record.bank_name === "string" ? record.bank_name : "",
+    currency: typeof record.currency === "string" ? record.currency : "",
+    payment_instruction:
+      typeof record.payment_instruction === "string" ? record.payment_instruction : "",
+  };
+}
+
+export async function fetchAdminSettings(): Promise<AdminSettings> {
+  const res = await apiRequest<ApiEnvelope<unknown>>("/admin/settings", {
+    token: token(),
+  });
+  const data = recordOf(res.data);
+  return { bank_account: bankAccountOf(data.bank_account) };
+}
+
+export async function updateAdminSettings(input: AdminSettingsInput): Promise<AdminSettings> {
+  const res = await apiRequest<ApiEnvelope<unknown>>("/admin/settings", {
+    method: "PATCH",
+    token: token(),
+    body: input,
+  });
+  const data = recordOf(res.data);
+  return { bank_account: bankAccountOf(data.bank_account ?? input.bank_account) };
+}
+
 export async function fetchAdminPayments(
   params: AdminPaymentsParams = {},
 ): Promise<AdminPaymentsResponse> {
@@ -474,6 +519,15 @@ export async function fetchAdminUser(id: string | number): Promise<AdminUserDeta
     },
     resources: arrayOf<Resource>(data.resources),
   };
+}
+
+export async function closeAdminUser(id: string | number, input: CloseAdminUserInput) {
+  const res = await apiRequest<ApiEnvelope<{ message?: string }>>(`/admin/users/${id}/close`, {
+    method: "POST",
+    token: token(),
+    body: input,
+  });
+  return res.data;
 }
 
 function adminResourcesQueryString(params: AdminResourcesParams = {}) {

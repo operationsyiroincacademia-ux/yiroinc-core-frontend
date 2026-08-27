@@ -42,6 +42,7 @@ export function AdminTutorRequestDetailsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [matchOpen, setMatchOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | number | null>(null);
+  const [confirmingReassignment, setConfirmingReassignment] = useState(false);
   const loadedRequest = data?.request;
   const candidateQuery = useAdminTutors(
     {
@@ -62,7 +63,40 @@ export function AdminTutorRequestDetailsPage() {
   const badge = requestBadge(request.status);
   const assignedTutor = data.tutor;
   const canMatch = !assignedTutor && request.status === "pending";
-  const canReassign = Boolean(assignedTutor) && request.status === "matched";
+  const canReassign =
+    Boolean(assignedTutor) && (request.status === "matched" || request.status === "in_progress");
+  const candidateTutors = candidateQuery.data?.tutors ?? [];
+  const selectedTutor = candidateTutors.find(
+    (tutor) => String(tutor.id) === String(selectedTutorId),
+  );
+  const selectedIsCurrentTutor =
+    Boolean(assignedTutor?.id) && String(selectedTutorId ?? "") === String(assignedTutor?.id);
+  const canSubmitTutorSelection =
+    Boolean(selectedTutorId) &&
+    (!canReassign || (!selectedIsCurrentTutor && Boolean(selectedTutor)));
+
+  const setMatchDialogOpen = (open: boolean) => {
+    setMatchOpen(open);
+    if (!open && !matchTutor.isPending) {
+      setSelectedTutorId(null);
+      setConfirmingReassignment(false);
+      setActionError(null);
+    }
+  };
+
+  const submitTutorMatch = () => {
+    if (!selectedTutorId || selectedIsCurrentTutor) return;
+    setActionError(null);
+    matchTutor.mutate(selectedTutorId, {
+      onSuccess: () => {
+        setMatchDialogOpen(false);
+        toast.success(
+          canReassign ? "Tutor reassigned successfully." : "Tutor matched successfully.",
+        );
+      },
+      onError: (err) => setActionError(describeApiError(err, "Tutor could not be matched.")),
+    });
+  };
 
   return (
     <AdminLayout>
@@ -84,12 +118,13 @@ export function AdminTutorRequestDetailsPage() {
               variant={canReassign ? "outline" : "default"}
               onClick={() => {
                 setActionError(null);
-                setSelectedTutorId(assignedTutor?.id ?? null);
-                setMatchOpen(true);
+                setSelectedTutorId(null);
+                setConfirmingReassignment(false);
+                setMatchDialogOpen(true);
               }}
             >
               {canReassign ? <RefreshCw className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-              {canReassign ? "Change tutor" : "Match tutor"}
+              {canReassign ? "Reassign tutor" : "Match tutor"}
             </Button>
           )}
           {request.status === "matched" && (
@@ -204,55 +239,88 @@ export function AdminTutorRequestDetailsPage() {
         }
       />
 
-      <Dialog open={matchOpen} onOpenChange={setMatchOpen}>
+      <Dialog open={matchOpen} onOpenChange={setMatchDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{canReassign ? "Change tutor" : "Match tutor"}</DialogTitle>
+            <DialogTitle>
+              {confirmingReassignment
+                ? "Reassign tutor?"
+                : canReassign
+                  ? "Reassign tutor"
+                  : "Match tutor"}
+            </DialogTitle>
             <DialogDescription>
-              Select an active, available tutor for this candidate request.
+              {confirmingReassignment
+                ? reassignmentConfirmationCopy(request.status, selectedTutor?.name)
+                : "Select an active, available tutor for this candidate request."}
             </DialogDescription>
           </DialogHeader>
 
-          {candidateQuery.isLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Loading tutors...</p>
-          ) : candidateQuery.isError ? (
-            <p className="py-8 text-center text-sm text-danger">
-              {describeApiError(candidateQuery.error, "Tutors could not be loaded.")}
-            </p>
-          ) : (candidateQuery.data?.tutors ?? []).length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No suitable active and available tutors were returned.
-            </p>
-          ) : (
-            <div className="max-h-[420px] space-y-2 overflow-y-auto">
-              {(candidateQuery.data?.tutors ?? []).map((tutor) => {
-                const active = String(selectedTutorId ?? "") === String(tutor.id);
-                return (
-                  <button
-                    key={String(tutor.id)}
-                    type="button"
-                    onClick={() => setSelectedTutorId(tutor.id)}
-                    className={
-                      active
-                        ? "w-full border border-primary bg-primary/5 px-4 py-3 text-left"
-                        : "w-full border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/60"
-                    }
-                  >
-                    <span className="block text-sm font-semibold text-foreground">
-                      {tutor.name}
-                    </span>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {expertiseText(tutor)} · {levelsText(tutor)} ·{" "}
-                      {tutor.timezone ?? "No timezone"}
-                    </span>
-                    <span className="mt-2 flex flex-wrap gap-2">
-                      <StatusBadge {...availabilityBadge(tutor.availability)} />
-                      <StatusBadge {...statusBadge(tutor.status)} />
-                    </span>
-                  </button>
-                );
-              })}
+          {confirmingReassignment ? (
+            <div className="border border-border bg-card px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+                New tutor
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {selectedTutor?.name ?? "Selected tutor"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {expertiseText(selectedTutor)} · {levelsText(selectedTutor)} ·{" "}
+                {selectedTutor?.timezone ?? "No timezone"}
+              </p>
             </div>
+          ) : (
+            <>
+              {candidateQuery.isLoading ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">Loading tutors...</p>
+              ) : candidateQuery.isError ? (
+                <p className="py-8 text-center text-sm text-danger">
+                  {describeApiError(candidateQuery.error, "Tutors could not be loaded.")}
+                </p>
+              ) : candidateTutors.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No suitable active and available tutors were returned.
+                </p>
+              ) : (
+                <div className="max-h-[420px] space-y-2 overflow-y-auto">
+                  {candidateTutors.map((tutor) => {
+                    const active = String(selectedTutorId ?? "") === String(tutor.id);
+                    const current =
+                      Boolean(assignedTutor?.id) && String(tutor.id) === String(assignedTutor?.id);
+                    return (
+                      <button
+                        key={String(tutor.id)}
+                        type="button"
+                        disabled={current}
+                        onClick={() => {
+                          if (!current) setSelectedTutorId(tutor.id);
+                        }}
+                        className={
+                          current
+                            ? "w-full cursor-not-allowed border border-border bg-muted/60 px-4 py-3 text-left opacity-80"
+                            : active
+                              ? "w-full border border-primary bg-primary/5 px-4 py-3 text-left"
+                              : "w-full border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/60"
+                        }
+                      >
+                        <span className="block text-sm font-semibold text-foreground">
+                          {tutor.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {expertiseText(tutor)} · {levelsText(tutor)} ·{" "}
+                          {tutor.timezone ?? "No timezone"}
+                        </span>
+                        <span className="mt-2 flex flex-wrap gap-2">
+                          {current ? <StatusBadge label="Currently assigned" tone="info" /> : null}
+                          <StatusBadge {...availabilityBadge(tutor.availability)} />
+                          <StatusBadge {...statusBadge(tutor.status)} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           {actionError && <p className="text-sm font-semibold text-danger">{actionError}</p>}
@@ -261,33 +329,34 @@ export function AdminTutorRequestDetailsPage() {
               type="button"
               variant="outline"
               disabled={matchTutor.isPending}
-              onClick={() => setMatchOpen(false)}
+              onClick={() => {
+                if (confirmingReassignment) {
+                  setConfirmingReassignment(false);
+                  return;
+                }
+                setMatchDialogOpen(false);
+              }}
             >
               Cancel
             </Button>
             <Button
               type="button"
-              disabled={!selectedTutorId || matchTutor.isPending}
+              variant={canReassign ? "destructive" : "default"}
+              disabled={!canSubmitTutorSelection || matchTutor.isPending}
               onClick={() => {
-                if (!selectedTutorId) return;
-                setActionError(null);
-                matchTutor.mutate(selectedTutorId, {
-                  onSuccess: () => {
-                    setMatchOpen(false);
-                    toast.success(
-                      canReassign ? "Tutor changed successfully." : "Tutor matched successfully.",
-                    );
-                  },
-                  onError: (err) =>
-                    setActionError(describeApiError(err, "Tutor could not be matched.")),
-                });
+                if (canReassign && !confirmingReassignment) {
+                  setActionError(null);
+                  setConfirmingReassignment(true);
+                  return;
+                }
+                submitTutorMatch();
               }}
               aria-busy={matchTutor.isPending}
             >
               {matchTutor.isPending ? (
-                <ButtonLoading>Saving...</ButtonLoading>
+                <ButtonLoading>{canReassign ? "Reassigning..." : "Saving..."}</ButtonLoading>
               ) : canReassign ? (
-                "Change tutor"
+                "Reassign tutor"
               ) : (
                 "Match tutor"
               )}
@@ -457,6 +526,14 @@ function requestBadge(status: string): { label: string; tone: StatusTone } {
 
 function date(value: string | null | undefined) {
   return value ? formatDateTime(value) : null;
+}
+
+function reassignmentConfirmationCopy(status: string, tutorName: string | undefined) {
+  const replacement = tutorName ?? "the selected tutor";
+  if (status === "in_progress") {
+    return `This request is already in progress. Reassigning the tutor will replace the current tutor with ${replacement}. The customer will be notified of the change.`;
+  }
+  return `This will replace the currently assigned tutor with ${replacement}. The customer will be notified of their new tutor.`;
 }
 
 function scalar(value: unknown) {

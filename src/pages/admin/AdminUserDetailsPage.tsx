@@ -1,13 +1,26 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, CreditCard, FileText, ShoppingBag, UserRound } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/DashboardCard";
 import { TableScroll } from "@/components/shared/TableScroll";
 import { Button } from "@/components/ui/button";
+import { ButtonLoading } from "@/components/ui/button-loading";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Textarea } from "@/components/ui/textarea";
 import type { AdminUser, AdminUserDetail } from "@/features/admin/api";
-import { useAdminUser } from "@/features/admin/hooks";
+import { useAdminUser, useCloseAdminUser } from "@/features/admin/hooks";
 import {
   adminUserDisplayName,
   adminUserJoinedAt,
@@ -26,7 +39,16 @@ import type { Order } from "@/features/orders/api";
 import type { Payment } from "@/features/payments/api";
 import type { Resource } from "@/features/resources/api";
 import { AdminLayout, PageHeader } from "@/layouts/AdminLayout/AdminLayout";
+import { ApiError } from "@/lib/api/client";
 import { describeApiError } from "@/lib/api/errors";
+
+const MAX_CLOSE_REASON_LENGTH = 1000;
+const CUSTOMER_PROFILE_TYPES = new Set([
+  "academic_user",
+  "cfa_candidate",
+  "frm_candidate",
+  "corporate_client",
+]);
 
 const PROFILE_FIELD_ORDER = [
   "profile_type",
@@ -50,7 +72,11 @@ const SUMMARY_LABELS: Record<string, string> = {
 
 export function AdminUserDetailsPage() {
   const { userId } = useParams({ strict: false }) as { userId: string };
-  const { data, isLoading, isError, error } = useAdminUser(userId);
+  const { data, isLoading, isError, error, refetch } = useAdminUser(userId);
+  const closeUser = useCloseAdminUser(userId);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [closeReason, setCloseReason] = useState("");
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -80,6 +106,41 @@ export function AdminUserDetailsPage() {
   }
 
   const { user } = data;
+  const closeReasonTrimmed = closeReason.trim();
+  const canCloseAccount =
+    accountStatus(user) === "active" &&
+    typeof user.profile_type === "string" &&
+    CUSTOMER_PROFILE_TYPES.has(user.profile_type);
+
+  const onCloseOpenChange = (open: boolean) => {
+    setCloseOpen(open);
+    if (!open && !closeUser.isPending) {
+      setCloseReason("");
+      setCloseError(null);
+    }
+  };
+
+  const submitCloseAccount = async () => {
+    if (!closeReasonTrimmed) {
+      setCloseError("Enter a reason for closure.");
+      return;
+    }
+    if (closeReasonTrimmed.length > MAX_CLOSE_REASON_LENGTH || closeUser.isPending) return;
+
+    try {
+      setCloseError(null);
+      await closeUser.mutateAsync({ reason: closeReasonTrimmed });
+      onCloseOpenChange(false);
+      toast.success("Customer account closed successfully.");
+    } catch (err) {
+      const message = closeAccountError(err);
+      setCloseError(message);
+      toast.error(message);
+      if (isAlreadyClosedError(err)) {
+        void refetch();
+      }
+    }
+  };
 
   return (
     <AdminLayout>
@@ -105,6 +166,18 @@ export function AdminUserDetailsPage() {
               </Field>
             ))}
           </dl>
+          {canCloseAccount ? (
+            <div className="flex justify-end border-t border-border px-5 py-4">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => onCloseOpenChange(true)}
+              >
+                Close account
+              </Button>
+            </div>
+          ) : null}
         </Panel>
 
         {profileFields(data).length > 0 ? (
@@ -134,6 +207,69 @@ export function AdminUserDetailsPage() {
         {hasAnyRequests(data) ? <RequestsPanel data={data} /> : null}
         {data.resources.length > 0 ? <PurchasedResources resources={data.resources} /> : null}
       </div>
+
+      <Dialog open={closeOpen} onOpenChange={onCloseOpenChange}>
+        <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Close customer account?</DialogTitle>
+            <DialogDescription>
+              This will permanently close the customer's YiroInc Academia account and remove their
+              access. Historical orders, payments and other business records will remain available
+              for administrative history.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This action cannot restore the existing account later.
+            </p>
+            <div>
+              <Label htmlFor="close-account-reason">Reason for closure</Label>
+              <Textarea
+                id="close-account-reason"
+                value={closeReason}
+                onChange={(event) => {
+                  setCloseReason(event.target.value);
+                  setCloseError(null);
+                }}
+                maxLength={MAX_CLOSE_REASON_LENGTH}
+                disabled={closeUser.isPending}
+                placeholder="Enter the reason for closing this account"
+                aria-invalid={Boolean(closeError)}
+                aria-describedby="close-account-reason-help"
+                className={closeError ? "mt-2 min-h-32 border-danger" : "mt-2 min-h-32"}
+              />
+              <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+                <p
+                  id="close-account-reason-help"
+                  role={closeError ? "alert" : undefined}
+                  className={closeError ? "text-xs text-danger" : "text-xs text-muted-foreground"}
+                >
+                  {closeError ?? "Required. Maximum 1000 characters."}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {closeReason.length}/{MAX_CLOSE_REASON_LENGTH}
+                </p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={closeUser.isPending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!closeReasonTrimmed || closeUser.isPending}
+              aria-busy={closeUser.isPending}
+              onClick={submitCloseAccount}
+            >
+              {closeUser.isPending ? <ButtonLoading>Closing...</ButtonLoading> : "Close account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
@@ -447,14 +583,50 @@ function MobilePaymentList({ payments }: { payments: Payment[] }) {
 }
 
 function accountFields(user: AdminUser) {
-  return [
+  const fields: { label: string; value: ReactNode }[] = [
+    { label: "Status", value: <StatusBadge {...accountStatusBadge(user)} /> },
     { label: "Display name", value: adminUserDisplayName(user) },
     { label: "First name", value: user.first_name },
     { label: "Last name", value: user.last_name },
     { label: "Email", value: user.email },
     { label: "User ID", value: `#${user.id}` },
     { label: "Joined", value: formatDateTime(adminUserJoinedAt(user)) },
-  ].filter((item) => item.value !== null && item.value !== undefined && item.value !== "");
+  ];
+  if (accountStatus(user) === "closed" && user.closed_at) {
+    fields.splice(1, 0, { label: "Closed on", value: formatDateTime(user.closed_at) });
+  }
+  return fields.filter(
+    (item) => item.value !== null && item.value !== undefined && item.value !== "",
+  );
+}
+
+function accountStatus(user: AdminUser) {
+  return user.account_status === "closed" ? "closed" : "active";
+}
+
+function accountStatusBadge(user: AdminUser) {
+  return accountStatus(user) === "closed"
+    ? { label: "Closed", tone: "danger" as const }
+    : { label: "Active", tone: "success" as const };
+}
+
+function closeAccountError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.status === 409) {
+      if (isAlreadyClosedError(error)) return "Customer account is already closed.";
+      return "This account cannot be closed while it has active requests, orders, or payments.";
+    }
+    if (error.status === 403) {
+      return "You do not have permission to close this account, or the selected user is not an eligible customer.";
+    }
+    if (error.status === 404) return "The customer account could not be found.";
+    if (error.status === 422) return "Enter a valid reason for closure.";
+  }
+  return describeApiError(error, "Customer account could not be closed. Please try again.");
+}
+
+function isAlreadyClosedError(error: unknown) {
+  return error instanceof ApiError && /already closed/i.test(error.message);
 }
 
 function profileFields(data: AdminUserDetail) {

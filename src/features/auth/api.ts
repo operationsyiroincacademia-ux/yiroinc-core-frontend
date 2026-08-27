@@ -39,12 +39,40 @@ export type AuthSession = {
   auth?: AuthMeta | null;
 };
 
+export type GoogleProfileRequired = {
+  requires_profile: true;
+  email: string;
+  name: string;
+};
+
+export type GoogleCustomerProfileType = Extract<
+  ProfileType,
+  "academic_user" | "cfa_candidate" | "frm_candidate" | "corporate_client"
+>;
+
+export type GoogleAuthInput = {
+  credential: string;
+  profile_type?: GoogleCustomerProfileType;
+  organization_name?: string;
+};
+
 export type RegisterInput = {
   first_name: string;
   last_name: string;
   email: string;
   password: string;
   profile_type: ProfileType;
+  organization_name?: string;
+};
+
+export type ForgotPasswordInput = {
+  email: string;
+};
+
+export type ResetPasswordInput = {
+  login: string;
+  key: string;
+  password: string;
 };
 
 export async function registerAccount(input: RegisterInput): Promise<AuthSession> {
@@ -64,6 +92,30 @@ export async function loginWithPassword(input: {
     body: input,
   });
   return res.data;
+}
+
+export async function authenticateWithGoogle(
+  input: GoogleAuthInput,
+): Promise<AuthSession | GoogleProfileRequired> {
+  const res = await apiRequest<ApiEnvelope<AuthSession | GoogleProfileRequired>>("/auth/google", {
+    method: "POST",
+    body: input,
+  });
+  return res.data;
+}
+
+export async function requestPasswordReset(input: ForgotPasswordInput): Promise<void> {
+  await apiRequest<ApiEnvelope<unknown>>("/auth/forgot-password", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<void> {
+  await apiRequest<ApiEnvelope<unknown>>("/auth/reset-password", {
+    method: "POST",
+    body: input,
+  });
 }
 
 /** GET /auth/me — restores the session from a stored JWT. */

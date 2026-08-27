@@ -10,12 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { describeApiError } from "@/lib/api/errors";
 import { useCreateTutorRequest } from "@/features/tutoring/hooks";
-import {
-  EXAM_LEVEL_OPTIONS,
-  EXAM_TYPE_OPTIONS,
-  LANGUAGE_OPTIONS,
-  TIMEZONE_OPTIONS,
-} from "@/features/tutoring/preview-data";
+import { TIMEZONE_OPTIONS } from "@/features/tutoring/preview-data";
 
 /**
  * Only the fields supported by POST /tutor-requests are collected here:
@@ -38,12 +33,18 @@ const EMPTY: Form = {
   examType: "",
   examLevel: "",
   timezone: "",
-  language: "",
+  language: "English",
   notes: "",
 };
 
 const SELECT_CLASS =
   "h-11 w-full border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60";
+
+const EXAM_TYPE_OPTIONS = ["CFA", "FRM"];
+const EXAM_LEVEL_OPTIONS: Record<string, string[]> = {
+  CFA: ["Level I", "Level II", "Level III"],
+  FRM: ["Part I", "Part II"],
+};
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -196,19 +197,7 @@ export function NewTutoringRequestPage() {
 
             <div>
               <Label htmlFor="language">Preferred language</Label>
-              <select
-                id="language"
-                className={SELECT_CLASS}
-                value={form.language}
-                onChange={(event) => set("language")(event.target.value)}
-              >
-                <option value="">Select language</option>
-                {LANGUAGE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <input id="language" className={SELECT_CLASS} value={form.language} readOnly />
               <FieldError message={errors.language} />
             </div>
 

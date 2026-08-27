@@ -9,14 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AdminResourceInput } from "@/features/admin/api";
 import { useUploadAdminResourceFile } from "@/features/admin/hooks";
 import { formatMoney, toFlag, toNumber } from "@/features/commerce/format";
+import { LEVEL_OPTIONS, type ExamLevel, type ExamType } from "@/features/exam/options";
 import type { Resource, ResourceAudience } from "@/features/resources/api";
 import { describeApiError } from "@/lib/api/errors";
 
 const SELECT_CLASS =
   "h-11 w-full border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60";
 
-type ExamType = "CFA" | "FRM";
-type ExamLevel = "level_1" | "level_2" | "level_3" | "part_1" | "part_2";
 type Pricing = "free" | "paid";
 type SourceType = "file" | "external";
 
@@ -35,18 +34,6 @@ type FormState = {
 };
 
 type Errors = Partial<Record<keyof FormState | "file", string>>;
-
-const LEVEL_OPTIONS: Record<ExamType, { label: string; value: ExamLevel }[]> = {
-  CFA: [
-    { label: "Level I", value: "level_1" },
-    { label: "Level II", value: "level_2" },
-    { label: "Level III", value: "level_3" },
-  ],
-  FRM: [
-    { label: "Part I", value: "part_1" },
-    { label: "Part II", value: "part_2" },
-  ],
-};
 
 const AUDIENCE_OPTIONS: { label: string; value: ResourceAudience }[] = [
   { label: "Academic Users", value: "academic" },

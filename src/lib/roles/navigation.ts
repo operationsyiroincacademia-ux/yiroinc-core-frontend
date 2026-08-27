@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Store,
   UserRound,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -87,6 +88,8 @@ const blueprints: Record<Experience, NavBlueprint> = {
         { label: "Requests", to: "/requests", icon: ClipboardList },
         { label: "Tutors", to: "/tutors", icon: Users },
         { label: "Resources", to: "/resources", icon: BookOpen },
+        { label: "Notifications", to: "/notifications", icon: Bell },
+        { label: "Settings", to: "/settings", icon: Settings },
       ],
     },
   },

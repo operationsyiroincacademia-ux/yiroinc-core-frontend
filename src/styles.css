@@ -193,3 +193,24 @@
   --info: oklch(0.66 0.13 257.76);
   --info-soft: oklch(0.28 0.05 258.34);
 }
+
+/* Preserve centering while avoiding incidental auth-page scrolling on shorter desktop viewports. */
+@media (min-width: 40rem) and (max-height: 47.5rem) {
+  .auth-layout {
+    padding-block: 1rem;
+  }
+}
+
+@media (min-width: 40rem) and (max-height: 42.5rem) {
+  .auth-layout__brand {
+    margin-bottom: 1.5rem;
+  }
+
+  .auth-layout__header {
+    padding-block: 1rem;
+  }
+
+  .auth-layout__body {
+    padding-block: 1.25rem;
+  }
+}

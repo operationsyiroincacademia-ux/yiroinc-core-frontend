@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchProfile, updateProfile, type Profile, type UpdateProfileInput } from "./api";
+import {
+  deleteAccount,
+  fetchProfile,
+  updateProfile,
+  type DeleteAccountInput,
+  type Profile,
+  type UpdateProfileInput,
+} from "./api";
 
 export const PROFILE_KEY = ["profile"];
 
@@ -23,5 +30,11 @@ export function useUpdateProfile() {
       );
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY });
     },
+  });
+}
+
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: (input: DeleteAccountInput) => deleteAccount(input),
   });
 }

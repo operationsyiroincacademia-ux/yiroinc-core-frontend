@@ -8,6 +8,7 @@
  */
 
 const TOKEN_KEY = "yac_token";
+export type AuthPersistence = "local" | "session";
 
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -18,11 +19,26 @@ export function getAuthToken(): string | null {
   }
 }
 
-export function setAuthToken(token: string | null) {
+export function getAuthPersistence(): AuthPersistence | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (window.localStorage.getItem(TOKEN_KEY)) return "local";
+    if (window.sessionStorage.getItem(TOKEN_KEY)) return "session";
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null, persistence: AuthPersistence = "local") {
   if (typeof window === "undefined") return;
   try {
-    if (token) window.localStorage.setItem(TOKEN_KEY, token);
-    else {
+    if (token) {
+      window.localStorage.removeItem(TOKEN_KEY);
+      window.sessionStorage.removeItem(TOKEN_KEY);
+      const storage = persistence === "local" ? window.localStorage : window.sessionStorage;
+      storage.setItem(TOKEN_KEY, token);
+    } else {
       window.localStorage.removeItem(TOKEN_KEY);
       window.sessionStorage.removeItem(TOKEN_KEY);
     }

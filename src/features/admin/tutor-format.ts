@@ -1,19 +1,16 @@
 import type { StatusTone } from "@/components/ui/status-badge";
 import { humaniseStatus } from "@/features/commerce/format";
+import {
+  EXAM_OPTIONS as SHARED_EXAM_OPTIONS,
+  LEVEL_OPTIONS as SHARED_LEVEL_OPTIONS,
+} from "@/features/exam/options";
 import type { AdminTutor } from "./api";
 
-export const EXAM_OPTIONS = ["CFA", "FRM"] as const;
+export const EXAM_OPTIONS = SHARED_EXAM_OPTIONS;
 
 export const LEVEL_OPTIONS: Record<string, { label: string; value: string }[]> = {
-  CFA: [
-    { label: "Level I", value: "level_1" },
-    { label: "Level II", value: "level_2" },
-    { label: "Level III", value: "level_3" },
-  ],
-  FRM: [
-    { label: "Part I", value: "part_1" },
-    { label: "Part II", value: "part_2" },
-  ],
+  CFA: [...SHARED_LEVEL_OPTIONS.CFA],
+  FRM: [...SHARED_LEVEL_OPTIONS.FRM],
 };
 
 export function normalizeStringList(value: unknown): string[] {

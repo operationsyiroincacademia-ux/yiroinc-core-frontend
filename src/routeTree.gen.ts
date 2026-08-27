@@ -10,8 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as AcademicIndexRouteImport } from './routes/academic.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CorporateIndexRouteImport } from './routes/corporate.index'
@@ -33,6 +37,7 @@ import { Route as AcademicProfileIndexRouteImport } from './routes/academic.prof
 import { Route as AcademicResourcesIndexRouteImport } from './routes/academic.resources.index'
 import { Route as AcademicServicesIndexRouteImport } from './routes/academic.services.index'
 import { Route as AcademicServicesProductIdRouteImport } from './routes/academic.services.$productId'
+import { Route as AdminNotificationsIndexRouteImport } from './routes/admin.notifications.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin.orders.$orderId'
 import { Route as AdminPaymentsIndexRouteImport } from './routes/admin.payments.index'
@@ -41,6 +46,7 @@ import { Route as AdminRequestsIndexRouteImport } from './routes/admin.requests.
 import { Route as AdminResourcesIndexRouteImport } from './routes/admin.resources.index'
 import { Route as AdminResourcesResourceIdRouteImport } from './routes/admin.resources.$resourceId'
 import { Route as AdminResourcesNewRouteImport } from './routes/admin.resources.new'
+import { Route as AdminSettingsIndexRouteImport } from './routes/admin.settings.index'
 import { Route as AdminTutorsIndexRouteImport } from './routes/admin.tutors.index'
 import { Route as AdminTutorsTutorIdRouteImport } from './routes/admin.tutors.$tutorId'
 import { Route as AdminTutorsNewRouteImport } from './routes/admin.tutors.new'
@@ -80,14 +86,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcademicIndexRoute = AcademicIndexRouteImport.update({
@@ -198,6 +224,11 @@ const AcademicServicesProductIdRoute =
     path: '/academic/services/$productId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminNotificationsIndexRoute = AdminNotificationsIndexRouteImport.update({
+  id: '/admin/notifications/',
+  path: '/admin/notifications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
   id: '/admin/orders/',
   path: '/admin/orders/',
@@ -237,6 +268,11 @@ const AdminResourcesResourceIdRoute =
 const AdminResourcesNewRoute = AdminResourcesNewRouteImport.update({
   id: '/admin/resources/new',
   path: '/admin/resources/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsIndexRoute = AdminSettingsIndexRouteImport.update({
+  id: '/admin/settings/',
+  path: '/admin/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTutorsIndexRoute = AdminTutorsIndexRouteImport.update({
@@ -416,8 +452,12 @@ const AdminRequestsTutorRequestIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic/': typeof AcademicIndexRoute
@@ -456,10 +496,12 @@ export interface FileRoutesByFullPath {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/admin/resources/': typeof AdminResourcesIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
   '/admin/tutors/': typeof AdminTutorsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/corporate/consulting/': typeof CorporateConsultingIndexRoute
@@ -483,8 +525,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic': typeof AcademicIndexRoute
@@ -523,10 +569,12 @@ export interface FileRoutesByTo {
   '/academic/profile': typeof AcademicProfileIndexRoute
   '/academic/resources': typeof AcademicResourcesIndexRoute
   '/academic/services': typeof AcademicServicesIndexRoute
+  '/admin/notifications': typeof AdminNotificationsIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/payments': typeof AdminPaymentsIndexRoute
   '/admin/requests': typeof AdminRequestsIndexRoute
   '/admin/resources': typeof AdminResourcesIndexRoute
+  '/admin/settings': typeof AdminSettingsIndexRoute
   '/admin/tutors': typeof AdminTutorsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/corporate/consulting': typeof CorporateConsultingIndexRoute
@@ -551,8 +599,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/payments/$paymentId': typeof PaymentsPaymentIdRoute
   '/academic/': typeof AcademicIndexRoute
@@ -591,10 +643,12 @@ export interface FileRoutesById {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/admin/resources/': typeof AdminResourcesIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
   '/admin/tutors/': typeof AdminTutorsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/corporate/consulting/': typeof CorporateConsultingIndexRoute
@@ -620,8 +674,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/privacy-policy'
     | '/register'
+    | '/reset-password'
+    | '/terms-of-service'
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic/'
@@ -660,10 +718,12 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/payments/'
     | '/admin/requests/'
     | '/admin/resources/'
+    | '/admin/settings/'
     | '/admin/tutors/'
     | '/admin/users/'
     | '/corporate/consulting/'
@@ -687,8 +747,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/privacy-policy'
     | '/register'
+    | '/reset-password'
+    | '/terms-of-service'
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic'
@@ -727,10 +791,12 @@ export interface FileRouteTypes {
     | '/academic/profile'
     | '/academic/resources'
     | '/academic/services'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/requests'
     | '/admin/resources'
+    | '/admin/settings'
     | '/admin/tutors'
     | '/admin/users'
     | '/corporate/consulting'
@@ -754,8 +820,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/privacy-policy'
     | '/register'
+    | '/reset-password'
+    | '/terms-of-service'
     | '/orders/$orderId'
     | '/payments/$paymentId'
     | '/academic/'
@@ -794,10 +864,12 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/payments/'
     | '/admin/requests/'
     | '/admin/resources/'
+    | '/admin/settings/'
     | '/admin/tutors/'
     | '/admin/users/'
     | '/corporate/consulting/'
@@ -822,8 +894,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   PaymentsPaymentIdRoute: typeof PaymentsPaymentIdRoute
   AcademicIndexRoute: typeof AcademicIndexRoute
@@ -862,10 +938,12 @@ export interface RootRouteChildren {
   AcademicProfileIndexRoute: typeof AcademicProfileIndexRoute
   AcademicResourcesIndexRoute: typeof AcademicResourcesIndexRoute
   AcademicServicesIndexRoute: typeof AcademicServicesIndexRoute
+  AdminNotificationsIndexRoute: typeof AdminNotificationsIndexRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminPaymentsIndexRoute: typeof AdminPaymentsIndexRoute
   AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
   AdminResourcesIndexRoute: typeof AdminResourcesIndexRoute
+  AdminSettingsIndexRoute: typeof AdminSettingsIndexRoute
   AdminTutorsIndexRoute: typeof AdminTutorsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   CorporateConsultingIndexRoute: typeof CorporateConsultingIndexRoute
@@ -897,6 +975,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -904,11 +989,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/academic/': {
@@ -1058,6 +1164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcademicServicesProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/notifications/': {
+      id: '/admin/notifications/'
+      path: '/admin/notifications'
+      fullPath: '/admin/notifications/'
+      preLoaderRoute: typeof AdminNotificationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/orders/': {
       id: '/admin/orders/'
       path: '/admin/orders'
@@ -1112,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/resources/new'
       fullPath: '/admin/resources/new'
       preLoaderRoute: typeof AdminResourcesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings/': {
+      id: '/admin/settings/'
+      path: '/admin/settings'
+      fullPath: '/admin/settings/'
+      preLoaderRoute: typeof AdminSettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/tutors/': {
@@ -1350,8 +1470,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   PaymentsPaymentIdRoute: PaymentsPaymentIdRoute,
   AcademicIndexRoute: AcademicIndexRoute,
@@ -1390,10 +1514,12 @@ const rootRouteChildren: RootRouteChildren = {
   AcademicProfileIndexRoute: AcademicProfileIndexRoute,
   AcademicResourcesIndexRoute: AcademicResourcesIndexRoute,
   AcademicServicesIndexRoute: AcademicServicesIndexRoute,
+  AdminNotificationsIndexRoute: AdminNotificationsIndexRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminPaymentsIndexRoute: AdminPaymentsIndexRoute,
   AdminRequestsIndexRoute: AdminRequestsIndexRoute,
   AdminResourcesIndexRoute: AdminResourcesIndexRoute,
+  AdminSettingsIndexRoute: AdminSettingsIndexRoute,
   AdminTutorsIndexRoute: AdminTutorsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   CorporateConsultingIndexRoute: CorporateConsultingIndexRoute,

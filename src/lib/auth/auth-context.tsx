@@ -9,16 +9,25 @@ import {
 } from "react";
 
 import {
+  authenticateWithGoogle,
   fetchCurrentSession,
   loginWithPassword,
   registerAccount,
   logoutSession,
   type AuthMeta,
   type AuthProfile,
+  type AuthSession,
   type AuthUser,
+  type GoogleAuthInput,
+  type GoogleProfileRequired,
   type RegisterInput,
 } from "@/features/auth/api";
-import { getAuthToken, setAuthToken } from "@/lib/auth/token";
+import {
+  getAuthPersistence,
+  getAuthToken,
+  setAuthToken,
+  type AuthPersistence,
+} from "@/lib/auth/token";
 import { resolveExperience, type Experience } from "@/lib/roles";
 
 /**
@@ -37,11 +46,22 @@ type AuthState = {
   auth: AuthMeta | null;
   isAdmin: boolean;
   experience: Experience | null;
-  signIn: (input: { email: string; password: string }) => Promise<{
+  signIn: (
+    input: { email: string; password: string },
+    options?: { remember?: boolean },
+  ) => Promise<{
     profile: AuthProfile | null;
     experience: Experience;
   }>;
   signUp: (input: RegisterInput) => Promise<AuthProfile>;
+  signInWithGoogle: (
+    input: GoogleAuthInput,
+    options?: { remember?: boolean },
+  ) => Promise<
+    | { status: "authenticated"; profile: AuthProfile | null; experience: Experience }
+    | { status: "requires_profile"; setup: GoogleProfileRequired }
+  >;
+  clearSession: () => void;
   signOut: () => Promise<void>;
 };
 
@@ -51,18 +71,25 @@ type CachedSession = { user: AuthUser; profile: AuthProfile | null; auth?: AuthM
 function readCache(): CachedSession | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(CACHE_KEY);
+    const raw = window.localStorage.getItem(CACHE_KEY) ?? window.sessionStorage.getItem(CACHE_KEY);
     return raw ? (JSON.parse(raw) as CachedSession) : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(value: CachedSession | null) {
+function writeCache(value: CachedSession | null, persistence: AuthPersistence = "local") {
   if (typeof window === "undefined") return;
   try {
-    if (value) window.localStorage.setItem(CACHE_KEY, JSON.stringify(value));
-    else window.localStorage.removeItem(CACHE_KEY);
+    if (value) {
+      window.localStorage.removeItem(CACHE_KEY);
+      window.sessionStorage.removeItem(CACHE_KEY);
+      const storage = persistence === "local" ? window.localStorage : window.sessionStorage;
+      storage.setItem(CACHE_KEY, JSON.stringify(value));
+    } else {
+      window.localStorage.removeItem(CACHE_KEY);
+      window.sessionStorage.removeItem(CACHE_KEY);
+    }
   } catch {
     /* storage unavailable */
   }
@@ -93,17 +120,23 @@ function sessionExperience(session: CachedSession | null): Experience | null {
   return session.profile ? resolveExperience(session.profile.profile_type, false) : null;
 }
 
+function requiresGoogleProfile(
+  result: AuthSession | GoogleProfileRequired,
+): result is GoogleProfileRequired {
+  return "requires_profile" in result && result.requires_profile === true;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [auth, setAuth] = useState<AuthMeta | null>(null);
 
-  const apply = useCallback((session: CachedSession) => {
+  const apply = useCallback((session: CachedSession, persistence: AuthPersistence = "local") => {
     setUser(session.user);
     setProfile(session.profile);
     setAuth(session.auth ?? null);
-    writeCache(session);
+    writeCache(session, persistence);
     setStatus("authenticated");
   }, []);
 
@@ -119,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Session restoration: a stored token is validated with GET /auth/me.
   useEffect(() => {
     const token = getAuthToken();
+    const persistence = getAuthPersistence();
     if (!token) {
       writeCache(null);
       setStatus("unauthenticated");
@@ -128,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     fetchCurrentSession(token)
       .then((session) => {
-        if (!cancelled && getAuthToken() === token) apply(session);
+        if (!cancelled && getAuthToken() === token) apply(session, persistence ?? "local");
       })
       .catch(() => {
         if (!cancelled && getAuthToken() === token) clear();
@@ -140,18 +174,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [apply, clear]);
 
   const signIn = useCallback(
-    async (input: { email: string; password: string }) => {
+    async (input: { email: string; password: string }, options: { remember?: boolean } = {}) => {
+      const persistence: AuthPersistence = options.remember === false ? "session" : "local";
       const session = await loginWithPassword(input);
-      setAuthToken(session.token);
-      const canonical = await fetchCurrentSession(session.token);
+      setAuthToken(session.token, persistence);
+      let canonical: Awaited<ReturnType<typeof fetchCurrentSession>>;
+      try {
+        canonical = await fetchCurrentSession(session.token);
+      } catch (error) {
+        setAuthToken(null);
+        writeCache(null);
+        throw error;
+      }
       const experience = sessionExperience(canonical);
       if (!experience) {
+        setAuthToken(null);
+        writeCache(null);
         throw new Error("Sign in completed without a profile.");
       }
-      apply(canonical);
+      apply(canonical, persistence);
       return {
         profile: canonical.profile,
         experience,
+      };
+    },
+    [apply],
+  );
+
+  const applyAuthSession = useCallback(
+    async (session: AuthSession, persistence: AuthPersistence) => {
+      if (!session.profile) {
+        throw new Error("Authentication completed without a profile.");
+      }
+      const experience = sessionExperience({
+        user: session.user,
+        profile: session.profile,
+        auth: session.auth ?? null,
+      });
+      if (!experience || experience === "admin") {
+        throw new Error("Google sign-in is available for customer accounts only.");
+      }
+      setAuthToken(session.token, persistence);
+      let canonical: Awaited<ReturnType<typeof fetchCurrentSession>>;
+      try {
+        canonical = await fetchCurrentSession(session.token);
+      } catch (error) {
+        setAuthToken(null);
+        writeCache(null);
+        throw error;
+      }
+      const canonicalExperience = sessionExperience(canonical);
+      if (!canonicalExperience || canonicalExperience === "admin") {
+        setAuthToken(null);
+        writeCache(null);
+        throw new Error("Google sign-in is available for customer accounts only.");
+      }
+      apply(canonical, persistence);
+      return {
+        profile: canonical.profile,
+        experience: canonicalExperience,
       };
     },
     [apply],
@@ -168,6 +249,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return session.profile;
     },
     [apply],
+  );
+
+  const signInWithGoogle = useCallback(
+    async (input: GoogleAuthInput, options: { remember?: boolean } = {}) => {
+      const persistence: AuthPersistence = options.remember === false ? "session" : "local";
+      const result = await authenticateWithGoogle(input);
+      if (requiresGoogleProfile(result)) {
+        return { status: "requires_profile" as const, setup: result };
+      }
+      const authenticated = await applyAuthSession(result, persistence);
+      return { status: "authenticated" as const, ...authenticated };
+    },
+    [applyAuthSession],
   );
 
   // Sign out: revoke server-side when possible, but always clear locally.
@@ -197,9 +291,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       experience,
       signIn,
       signUp,
+      signInWithGoogle,
+      clearSession: clear,
       signOut,
     }),
-    [status, user, profile, auth, isAdmin, experience, signIn, signUp, signOut],
+    [
+      status,
+      user,
+      profile,
+      auth,
+      isAdmin,
+      experience,
+      signIn,
+      signUp,
+      signInWithGoogle,
+      clear,
+      signOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

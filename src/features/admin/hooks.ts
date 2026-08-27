@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  closeAdminUser,
   completeConsultingRequest,
   completeTutorRequest,
   createAdminTutor,
@@ -17,6 +18,7 @@ import {
   fetchAdminProcurements,
   fetchAdminResource,
   fetchAdminResources,
+  fetchAdminSettings,
   fetchAdminUser,
   fetchAdminUsers,
   fetchAdminTutor,
@@ -33,9 +35,12 @@ import {
   updateOrderStatus,
   updateAdminTutor,
   updateAdminResource,
+  updateAdminSettings,
   uploadAdminResourceFile,
   verifyPayment,
+  type CloseAdminUserInput,
   type AdminResourceInput,
+  type AdminSettingsInput,
   type AdminResourcesParams,
   type AdminUsersParams,
   type AdminTutorInput,
@@ -59,12 +64,31 @@ export const ADMIN_RESOURCES_KEY = ["admin", "resources"];
 export const ADMIN_RESOURCE_KEY = ["admin", "resource"];
 export const ADMIN_USERS_KEY = ["admin", "users"];
 export const ADMIN_USER_KEY = ["admin", "user"];
+export const ADMIN_SETTINGS_KEY = ["admin", "settings"];
 
 export function useAdminDashboard() {
   return useQuery({
     queryKey: ADMIN_DASHBOARD_KEY,
     queryFn: fetchAdminDashboard,
     retry: false,
+  });
+}
+
+export function useAdminSettings() {
+  return useQuery({
+    queryKey: ADMIN_SETTINGS_KEY,
+    queryFn: fetchAdminSettings,
+    retry: false,
+  });
+}
+
+export function useUpdateAdminSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminSettingsInput) => updateAdminSettings(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_KEY });
+    },
   });
 }
 
@@ -171,6 +195,22 @@ export function useAdminUser(id: string | number | undefined) {
     queryFn: () => fetchAdminUser(id!),
     enabled: id !== undefined && id !== "",
     retry: false,
+  });
+}
+
+function invalidateAdminUserQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string | number,
+) {
+  void queryClient.invalidateQueries({ queryKey: ADMIN_USERS_KEY });
+  void queryClient.invalidateQueries({ queryKey: [...ADMIN_USER_KEY, String(id)] });
+}
+
+export function useCloseAdminUser(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CloseAdminUserInput) => closeAdminUser(id, input),
+    onSuccess: () => invalidateAdminUserQueries(queryClient, id),
   });
 }
 

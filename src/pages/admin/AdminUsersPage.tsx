@@ -104,15 +104,17 @@ export function AdminUsersPage() {
               <table className="w-full min-w-[920px] text-left">
                 <thead>
                   <tr className="border-b border-border">
-                    {["User", "Type", "Email", "Country", "Joined", ""].map((heading, index) => (
-                      <th
-                        key={heading || `action-${index}`}
-                        scope="col"
-                        className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
-                      >
-                        {heading}
-                      </th>
-                    ))}
+                    {["User", "Type", "Status", "Email", "Country", "Joined", ""].map(
+                      (heading, index) => (
+                        <th
+                          key={heading || `action-${index}`}
+                          scope="col"
+                          className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
+                        >
+                          {heading}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -135,7 +137,10 @@ export function AdminUsersPage() {
                         {user.email || `User #${user.id}`} · {formatDate(adminUserJoinedAt(user))}
                       </p>
                     </div>
-                    <StatusBadge label={adminUserTypeLabel(user.profile_type)} tone="info" />
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <StatusBadge label={adminUserTypeLabel(user.profile_type)} tone="info" />
+                      <StatusBadge {...accountStatusBadge(user)} />
+                    </div>
                   </div>
                   <Button asChild variant="outline" size="sm" className="mt-3 w-full">
                     <Link to="/admin/users/$userId" params={{ userId: String(user.id) }}>
@@ -198,6 +203,9 @@ function UserRow({ user }: { user: AdminUser }) {
       <td className="px-5 py-4">
         <StatusBadge label={adminUserTypeLabel(user.profile_type)} tone="info" />
       </td>
+      <td className="px-5 py-4">
+        <StatusBadge {...accountStatusBadge(user)} />
+      </td>
       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
         {user.email || "-"}
       </td>
@@ -217,4 +225,14 @@ function UserRow({ user }: { user: AdminUser }) {
       </td>
     </tr>
   );
+}
+
+function accountStatus(user: AdminUser) {
+  return user.account_status === "closed" ? "closed" : "active";
+}
+
+function accountStatusBadge(user: AdminUser) {
+  return accountStatus(user) === "closed"
+    ? { label: "Closed", tone: "danger" as const }
+    : { label: "Active", tone: "success" as const };
 }
