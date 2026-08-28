@@ -264,15 +264,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applyAuthSession],
   );
 
-  // Sign out: revoke server-side when possible, but always clear locally.
+  // Sign out: clear locally immediately; server-side revocation is best effort.
   const signOut = useCallback(async () => {
     const token = getAuthToken();
     if (token) {
-      try {
-        await logoutSession(token);
-      } catch {
+      void logoutSession(token).catch(() => {
         /* expired or rejected token — local state is cleared regardless */
-      }
+      });
     }
     clear();
   }, [clear]);
