@@ -3,6 +3,7 @@ import { RoleLink } from "@/components/shared/RoleLink";
 import { ArrowRight, Search } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { TableLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,9 +89,7 @@ export function PaymentsListPage() {
 
       <section className="border border-border bg-card">
         {isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-            Loading your payments…
-          </p>
+          <TableLoading columns={6} />
         ) : isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">Payments could not be loaded</p>

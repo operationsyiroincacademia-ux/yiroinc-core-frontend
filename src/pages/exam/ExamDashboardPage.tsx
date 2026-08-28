@@ -3,6 +3,7 @@ import { ShoppingBag, CreditCard, Bell, GraduationCap, ArrowRight, Upload } from
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { DashboardStatCard, SectionCard, EmptyState } from "@/components/shared/DashboardCard";
+import { DashboardSkeleton } from "@/components/shared/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/lib/auth/current-user";
 import { useExamDashboard } from "@/features/dashboard/hooks";
@@ -80,9 +81,7 @@ export function ExamDashboardPage() {
       />
 
       {dashboard.isLoading ? (
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading dashboard…</p>
-        </section>
+        <DashboardSkeleton />
       ) : dashboard.isError ? (
         <section className="border border-border bg-card px-6 py-16 text-center">
           <p className="text-sm font-semibold text-foreground">Dashboard could not be loaded</p>

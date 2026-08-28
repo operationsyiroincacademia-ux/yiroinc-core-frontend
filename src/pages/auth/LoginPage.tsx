@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { AuthDivider, GoogleAuth } from "./GoogleAuth";
+import { AuthDivider, GoogleAccountSetupForm, GoogleAuth, type GoogleSetup } from "./GoogleAuth";
 import { AuthLayout, Field, inputClass, PasswordInput } from "./AuthLayout";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
@@ -9,9 +9,12 @@ import { describeApiError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-context";
 import { EXPERIENCE_BASE } from "@/lib/roles/experience-context";
 
+type GoogleLoginStep = { status: "login" } | { status: "setup"; setup: GoogleSetup };
+
 export function LoginPage() {
   const { status, experience, signIn } = useAuth();
   const navigate = useNavigate();
+  const [googleStep, setGoogleStep] = useState<GoogleLoginStep>({ status: "login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -20,10 +23,10 @@ export function LoginPage() {
 
   // An already-authenticated user never sees the login form.
   useEffect(() => {
-    if (status === "authenticated" && experience) {
+    if (googleStep.status === "login" && status === "authenticated" && experience) {
       navigate({ to: EXPERIENCE_BASE[experience], replace: true });
     }
-  }, [status, experience, navigate]);
+  }, [googleStep.status, status, experience, navigate]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,6 +43,21 @@ export function LoginPage() {
     }
   };
 
+  if (googleStep.status === "setup") {
+    return (
+      <AuthLayout title="Finish account setup">
+        <GoogleAccountSetupForm
+          setup={googleStep.setup}
+          remember={remember}
+          onComplete={({ experience: nextExperience }) =>
+            navigate({ to: EXPERIENCE_BASE[nextExperience], replace: true })
+          }
+          onUseDifferentAccount={() => setGoogleStep({ status: "login" })}
+        />
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout title="Welcome back" titleScale="login">
       <div className="space-y-5">
@@ -49,6 +67,7 @@ export function LoginPage() {
           onAuthenticated={(nextExperience) =>
             navigate({ to: EXPERIENCE_BASE[nextExperience], replace: true })
           }
+          onSetupRequired={(setup) => setGoogleStep({ status: "setup", setup })}
         />
         <AuthDivider />
 

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { RoleLink } from "@/components/shared/RoleLink";
+import { DetailPageLoading, PanelLoading } from "@/components/shared/LoadingState";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -96,8 +97,7 @@ export function CheckoutPage() {
   if (orderQuery.isPending) {
     return (
       <AppShell>
-        <PageHeader title="Loading order…" />
-        <div className="h-72 animate-pulse border border-border bg-muted" />
+        <DetailPageLoading title="Loading order..." message="Loading checkout details..." />
       </AppShell>
     );
   }
@@ -280,9 +280,7 @@ export function CheckoutPage() {
             description="Transfer the exact total to the account below."
           >
             {bank.isPending && (
-              <div className="px-5 py-8">
-                <div className="h-24 animate-pulse bg-muted" />
-              </div>
+              <PanelLoading message="Loading bank details..." />
             )}
 
             {bank.isError && (

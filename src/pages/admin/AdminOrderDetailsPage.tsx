@@ -16,6 +16,7 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusTone } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { downloadAdminProof, type AdminPaymentProof } from "@/features/admin/api";
 import {
   useAdminOrder,
@@ -46,10 +47,7 @@ export function AdminOrderDetailsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <PageHeader title="Loading order..." />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading this order...</p>
-        </section>
+        <DetailPageLoading title="Loading order..." message="Loading this order..." />
       </AdminLayout>
     );
   }

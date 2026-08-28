@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { useAuth } from "@/lib/auth/auth-context";
+import { FullPageLoading } from "@/components/shared/LoadingState";
 
 import { EXPERIENCE_BASE } from "@/lib/roles/experience-context";
 
@@ -25,11 +26,7 @@ function IndexRedirect() {
     }
   }, [status, experience, navigate]);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background">
-      <p className="text-sm text-muted-foreground">Loading your portal…</p>
-    </main>
-  );
+  return <FullPageLoading />;
 }
 
 export const Route = createFileRoute("/")({

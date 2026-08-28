@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useAdminTutor, useUpdateAdminTutor } from "@/features/admin/hooks";
 import { availabilityBadge, statusBadge } from "@/features/admin/tutor-format";
@@ -19,10 +20,7 @@ export function AdminTutorDetailsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <PageHeader title="Loading tutor..." />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading tutor...</p>
-        </section>
+        <DetailPageLoading title="Loading tutor..." message="Loading tutor..." />
       </AdminLayout>
     );
   }

@@ -3,6 +3,7 @@ import { ArrowRight, ImageIcon } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { EmptyState } from "@/components/shared/DashboardCard";
+import { CardGridLoading } from "@/components/shared/LoadingState";
 import { RoleLink } from "@/components/shared/RoleLink";
 import { Button } from "@/components/ui/button";
 import { describeApiError, type Product } from "@/features/commerce/api";
@@ -36,11 +37,7 @@ export function StorePage() {
       )}
 
       {isPending && !isError && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((key) => (
-            <div key={key} className="h-56 animate-pulse border border-border bg-muted" />
-          ))}
-        </div>
+        <CardGridLoading cards={6} withMedia />
       )}
 
       {!isPending && !isError && products.length === 0 && (

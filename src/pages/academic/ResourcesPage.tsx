@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { CardGridLoading } from "@/components/shared/LoadingState";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useCreateOrder } from "@/features/commerce/hooks";
@@ -183,9 +184,7 @@ export function ResourcesPage() {
       </div>
 
       {isLoading ? (
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading resources…</p>
-        </section>
+        <CardGridLoading cards={6} />
       ) : isError ? (
         <section className="border border-border bg-card px-6 py-16 text-center">
           <p className="text-sm font-semibold text-foreground">Resources could not be loaded</p>

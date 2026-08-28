@@ -24,10 +24,11 @@ type DashboardNotificationsData = {
   notifications?: Notification[];
 };
 
-export function useNotifications(page = 1, perPage = 20) {
+export function useNotifications(page = 1, perPage = 20, enabled = true) {
   return useQuery({
     queryKey: [...NOTIFICATIONS_KEY, page, perPage],
     queryFn: () => fetchNotifications({ page, perPage }),
+    enabled,
     retry: false,
   });
 }

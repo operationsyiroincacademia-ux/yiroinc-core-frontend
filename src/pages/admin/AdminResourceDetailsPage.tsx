@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   useAdminResource,
@@ -43,10 +44,7 @@ export function AdminResourceDetailsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <PageHeader title="Loading resource..." />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading resource...</p>
-        </section>
+        <DetailPageLoading title="Loading resource..." message="Loading resource..." />
       </AdminLayout>
     );
   }

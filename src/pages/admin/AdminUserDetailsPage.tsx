@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/DashboardCard";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { TableScroll } from "@/components/shared/TableScroll";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
@@ -81,10 +82,7 @@ export function AdminUserDetailsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <PageHeader title="Loading user..." />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading user details...</p>
-        </section>
+        <DetailPageLoading title="Loading user..." message="Loading user details..." />
       </AdminLayout>
     );
   }

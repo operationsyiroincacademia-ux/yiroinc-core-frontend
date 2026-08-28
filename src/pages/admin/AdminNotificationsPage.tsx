@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { ListLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDateTime, humaniseStatus } from "@/features/commerce/format";
 import { isRead, type Notification } from "@/features/notifications/api";
@@ -68,9 +69,7 @@ export function AdminNotificationsPage() {
 
       <section className="min-w-0 border border-border bg-card">
         {notifications.isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-            Loading notifications...
-          </p>
+          <ListLoading />
         ) : notifications.isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">

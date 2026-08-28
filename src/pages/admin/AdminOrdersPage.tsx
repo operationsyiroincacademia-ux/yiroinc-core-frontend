@@ -4,6 +4,7 @@ import { ArrowRight, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/DashboardCard";
+import { TableLoading } from "@/components/shared/LoadingState";
 import { TableScroll } from "@/components/shared/TableScroll";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -73,7 +74,7 @@ export function AdminOrdersPage() {
 
       <section className="min-w-0 border border-border bg-card">
         {query.isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">Loading orders...</p>
+          <TableLoading columns={7} minWidthClassName="min-w-[980px]" />
         ) : query.isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">Orders could not be loaded</p>

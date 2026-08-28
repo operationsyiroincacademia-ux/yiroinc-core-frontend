@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { PanelLoading } from "@/components/shared/LoadingState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminSettings, useUpdateAdminSettings } from "@/features/admin/hooks";
@@ -75,9 +76,7 @@ export function AdminSettingsPage() {
         </header>
 
         {settings.isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-            Loading settings...
-          </p>
+          <PanelLoading message="Loading settings..." />
         ) : settings.isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">Settings could not be loaded</p>

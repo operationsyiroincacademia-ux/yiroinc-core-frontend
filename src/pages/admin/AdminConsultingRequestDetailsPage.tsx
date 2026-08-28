@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusTone } from "@/components/ui/status-badge";
 import { formatDateTime, formatMoney, humaniseStatus, toNumber } from "@/features/commerce/format";
@@ -140,10 +141,7 @@ export function AdminConsultingRequestDetailsPage() {
 function Loading() {
   return (
     <AdminLayout>
-      <PageHeader title="Loading consulting request..." />
-      <section className="border border-border bg-card px-6 py-16 text-center">
-        <p className="text-sm text-muted-foreground">Loading request...</p>
-      </section>
+      <DetailPageLoading title="Loading consulting request..." message="Loading request..." />
     </AdminLayout>
   );
 }

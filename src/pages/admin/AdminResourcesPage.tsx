@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/DashboardCard";
+import { TableLoading } from "@/components/shared/LoadingState";
 import { TableScroll } from "@/components/shared/TableScroll";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -131,9 +132,7 @@ export function AdminResourcesPage() {
 
       <section className="min-w-0 border border-border bg-card">
         {query.isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-            Loading resources...
-          </p>
+          <TableLoading columns={9} minWidthClassName="min-w-[1080px]" />
         ) : query.isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">Resources could not be loaded</p>

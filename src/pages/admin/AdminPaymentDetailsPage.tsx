@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
   downloadAdminProof,
@@ -55,10 +56,7 @@ export function AdminPaymentDetailsPage() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <PageHeader title="Loading payment..." />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading this payment...</p>
-        </section>
+        <DetailPageLoading title="Loading payment..." message="Loading this payment..." />
       </AdminLayout>
     );
   }

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { RequireAdmin } from "@/app/guards/RouteGuards";
 import { AdminPaymentsPage } from "@/pages/admin/AdminPaymentsPage";
 import { useAuth } from "@/lib/auth/auth-context";
+import { FullPageLoading } from "@/components/shared/LoadingState";
 
 function AdminPaymentsRoute() {
   const { status, isAdmin } = useAuth();
@@ -20,11 +21,7 @@ function AdminPaymentsRoute() {
   }, [status, isAdmin, navigate]);
 
   if (status !== "authenticated" || !isAdmin) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Loading your portal...</p>
-      </main>
-    );
+    return <FullPageLoading />;
   }
 
   return (

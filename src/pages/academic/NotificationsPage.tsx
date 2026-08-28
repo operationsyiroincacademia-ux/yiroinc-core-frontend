@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { ListLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
@@ -102,8 +103,8 @@ export function NotificationsPage() {
       )}
 
       {isLoading ? (
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading notifications…</p>
+        <section className="border border-border bg-card">
+          <ListLoading />
         </section>
       ) : isError ? (
         <section className="border border-border bg-card px-6 py-16 text-center">

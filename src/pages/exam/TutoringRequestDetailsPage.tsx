@@ -4,6 +4,7 @@ import { RoleLink } from "@/components/shared/RoleLink";
 import { ArrowLeft, GraduationCap, MessageCircle } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { useTutorRequest } from "@/features/tutoring/hooks";
@@ -62,13 +63,10 @@ export function TutoringRequestDetailsPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <PageHeader
+        <DetailPageLoading
           title="Loading tutoring request"
-          description="Retrieving the latest details for this request."
+          message="Loading tutoring request..."
         />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading tutoring request…</p>
-        </section>
       </AppShell>
     );
   }

@@ -3,6 +3,7 @@ import { RoleLink } from "@/components/shared/RoleLink";
 import { ArrowLeft, Upload, CreditCard } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { DetailPageLoading, PanelLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { useOrder } from "@/features/orders/hooks";
@@ -70,9 +71,7 @@ export function OrderDetailsPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading this order…</p>
-        </section>
+        <DetailPageLoading title="Loading order..." message="Loading this order..." />
       </AppShell>
     );
   }
@@ -195,9 +194,7 @@ export function OrderDetailsPage() {
             }
           >
             {paymentsQuery.isLoading ? (
-              <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-                Loading payments…
-              </p>
+              <PanelLoading message="Loading payments..." />
             ) : paymentsQuery.isError ? (
               <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                 {describeApiError(

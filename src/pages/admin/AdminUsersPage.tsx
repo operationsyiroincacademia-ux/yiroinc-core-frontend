@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/DashboardCard";
+import { TableLoading } from "@/components/shared/LoadingState";
 import { TableScroll } from "@/components/shared/TableScroll";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +85,7 @@ export function AdminUsersPage() {
 
       <section className="min-w-0 border border-border bg-card">
         {query.isLoading ? (
-          <p className="px-6 py-16 text-center text-sm text-muted-foreground">Loading users...</p>
+          <TableLoading columns={7} minWidthClassName="min-w-[920px]" />
         ) : query.isError ? (
           <div className="px-6 py-16 text-center">
             <p className="text-sm font-semibold text-foreground">Users could not be loaded</p>

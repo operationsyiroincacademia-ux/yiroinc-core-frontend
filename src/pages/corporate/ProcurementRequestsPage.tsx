@@ -1,5 +1,6 @@
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { SectionCard, EmptyState } from "@/components/shared/DashboardCard";
+import { PanelLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { describeApiError } from "@/lib/api/errors";
 import { formatDate } from "@/features/commerce/format";
@@ -28,7 +29,7 @@ export function ProcurementRequestsPage() {
         className="mt-6"
       >
         {isLoading ? (
-          <EmptyState message="Loading procurement requests…" />
+          <PanelLoading message="Loading procurement requests..." />
         ) : isError ? (
           <div className="px-5 py-8 text-center">
             <p className="text-sm font-semibold text-foreground">

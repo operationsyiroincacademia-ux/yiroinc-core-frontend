@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { DetailPageLoading, PanelLoading } from "@/components/shared/LoadingState";
 import {
   Dialog,
   DialogContent,
@@ -272,7 +273,7 @@ export function AdminTutorRequestDetailsPage() {
           ) : (
             <>
               {candidateQuery.isLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Loading tutors...</p>
+                <PanelLoading message="Loading tutors..." />
               ) : candidateQuery.isError ? (
                 <p className="py-8 text-center text-sm text-danger">
                   {describeApiError(candidateQuery.error, "Tutors could not be loaded.")}
@@ -371,10 +372,7 @@ export function AdminTutorRequestDetailsPage() {
 function Loading({ title }: { title: string }) {
   return (
     <AdminLayout>
-      <PageHeader title={title} />
-      <section className="border border-border bg-card px-6 py-16 text-center">
-        <p className="text-sm text-muted-foreground">Loading request...</p>
-      </section>
+      <DetailPageLoading title={title} message="Loading request..." />
     </AdminLayout>
   );
 }

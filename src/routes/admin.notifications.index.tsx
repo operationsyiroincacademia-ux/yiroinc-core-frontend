@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { RequireAdmin } from "@/app/guards/RouteGuards";
 import { useAuth } from "@/lib/auth/auth-context";
+import { FullPageLoading } from "@/components/shared/LoadingState";
 import { AdminNotificationsPage } from "@/pages/admin/AdminNotificationsPage";
 
 function AdminNotificationsRoute() {
@@ -20,11 +21,7 @@ function AdminNotificationsRoute() {
   }, [status, isAdmin, navigate]);
 
   if (status !== "authenticated" || !isAdmin) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Loading your portal...</p>
-      </main>
-    );
+    return <FullPageLoading />;
   }
 
   return (

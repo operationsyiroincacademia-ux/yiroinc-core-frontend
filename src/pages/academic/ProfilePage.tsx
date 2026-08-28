@@ -5,6 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { PanelLoading } from "@/components/shared/LoadingState";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import {
@@ -207,8 +208,8 @@ export function ProfilePage() {
       />
 
       {profileQuery.isLoading ? (
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading your profile…</p>
+        <section className="border border-border bg-card">
+          <PanelLoading message="Loading your profile..." />
         </section>
       ) : profileQuery.isError || !profileQuery.data ? (
         <section className="border border-border bg-card px-6 py-16 text-center">

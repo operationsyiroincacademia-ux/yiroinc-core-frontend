@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { RequireAdmin } from "@/app/guards/RouteGuards";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { useAuth } from "@/lib/auth/auth-context";
+import { FullPageLoading } from "@/components/shared/LoadingState";
 
 const TITLE = "Admin Dashboard | YiroInc Academia Portal";
 const DESC = "Administrator workspace for YiroInc Academia operations.";
@@ -23,11 +24,7 @@ function AdminIndexRoute() {
   }, [status, isAdmin, navigate]);
 
   if (status !== "authenticated" || !isAdmin) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Loading your portal…</p>
-      </main>
-    );
+    return <FullPageLoading />;
   }
 
   return (

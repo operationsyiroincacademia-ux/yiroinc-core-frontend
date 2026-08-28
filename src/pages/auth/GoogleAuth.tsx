@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
+import { ContentLoading } from "@/components/shared/LoadingState";
 import type { GoogleCustomerProfileType } from "@/features/auth/api";
 import { ApiError } from "@/lib/api/client";
 import { describeApiError, isClosedAccountError } from "@/lib/api/errors";
@@ -458,10 +459,10 @@ export function GoogleAuth({
         aria-busy={pending || scriptStatus === "idle"}
       />
       {scriptStatus === "idle" ? (
-        <p className="text-center text-xs text-muted-foreground">Loading Google sign-in...</p>
+        <ContentLoading message="Loading Google sign-in..." className="text-xs" />
       ) : null}
       {pending ? (
-        <p className="text-center text-xs text-muted-foreground">Checking Google...</p>
+        <ContentLoading message="Checking Google..." className="text-xs" />
       ) : null}
       {error ? (
         <p role="alert" className="bg-danger-soft px-3 py-2.5 text-xs text-danger">

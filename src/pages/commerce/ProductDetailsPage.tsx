@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
 import { RoleLink } from "@/components/shared/RoleLink";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import { describeApiError, type Product } from "@/features/commerce/api";
@@ -26,8 +27,7 @@ export function ProductDetailsPage() {
   if (isPending) {
     return (
       <AppShell>
-        <PageHeader title="Loading product…" />
-        <div className="h-72 animate-pulse border border-border bg-muted" />
+        <DetailPageLoading title="Loading product..." message="Loading product details..." />
       </AppShell>
     );
   }

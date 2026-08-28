@@ -1,4 +1,5 @@
 import { EmptyState, SectionCard } from "@/components/shared/DashboardCard";
+import { DashboardSkeleton } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
@@ -112,9 +113,7 @@ export function AdminDashboardPage() {
       />
 
       {dashboard.isLoading ? (
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
-        </section>
+        <DashboardSkeleton variant="admin" />
       ) : dashboard.isError ? (
         <section className="border border-border bg-card px-6 py-16 text-center">
           <p className="text-sm font-semibold text-foreground">Dashboard could not be loaded</p>

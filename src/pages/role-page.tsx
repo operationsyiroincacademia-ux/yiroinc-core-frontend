@@ -2,6 +2,7 @@ import { useEffect, type ComponentType } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { useAuth } from "@/lib/auth/auth-context";
+import { FullPageLoading } from "@/components/shared/LoadingState";
 import type { Experience } from "@/lib/roles";
 import { EXPERIENCE_BASE, ExperienceProvider } from "@/lib/roles/experience-context";
 
@@ -29,11 +30,7 @@ function SessionGate({
   }, [status, mismatch, userExperience, navigate]);
 
   if (status !== "authenticated" || mismatch) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Loading your portal…</p>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   return <>{children}</>;

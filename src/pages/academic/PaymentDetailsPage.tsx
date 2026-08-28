@@ -3,6 +3,7 @@ import { RoleLink } from "@/components/shared/RoleLink";
 import { ArrowLeft, CheckCircle2, Clock, FileText, XCircle, type LucideIcon } from "lucide-react";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
+import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { usePayment } from "@/features/payments/hooks";
@@ -63,10 +64,7 @@ export function PaymentDetailsPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <PageHeader title="Loading payment…" />
-        <section className="border border-border bg-card px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">Loading this payment…</p>
-        </section>
+        <DetailPageLoading title="Loading payment..." message="Loading this payment..." />
       </AppShell>
     );
   }
