@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Building2, Copy, FileText, Info, Upload } from "lucide-react";
+import { ArrowLeft, Copy, FileText, Info, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
@@ -114,7 +114,7 @@ export function CheckoutPage() {
             Open the order from your orders list, or place the order again from the store.
           </p>
           <Button asChild variant="outline">
-            <RoleLink to="/services">Back to Yiroinc Store</RoleLink>
+            <RoleLink to="/store">Back to Yiroinc Store</RoleLink>
           </Button>
         </section>
       </AppShell>
@@ -332,8 +332,7 @@ export function CheckoutPage() {
         </div>
 
         <aside className="h-fit border border-border bg-card">
-          <header className="flex items-center gap-2 border-b border-border px-5 py-4">
-            <Building2 className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+          <header className="border-b border-border px-5 py-4">
             <h2 className="text-sm font-bold tracking-tight text-foreground">
               Upload proof of payment
             </h2>

@@ -41,7 +41,7 @@ export function ProductDetailsPage() {
         />
         <section className="border border-border bg-card px-6 py-16 text-center">
           <Button asChild variant="outline">
-            <RoleLink to="/services">Back to Yiroinc Store</RoleLink>
+            <RoleLink to="/store">Back to Yiroinc Store</RoleLink>
           </Button>
         </section>
       </AppShell>
@@ -65,7 +65,7 @@ export function ProductDetailsPage() {
   return (
     <AppShell>
       <RoleLink
-        to="/services"
+        to="/store"
         className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />

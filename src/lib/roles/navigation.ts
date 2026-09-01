@@ -46,7 +46,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Yiroinc Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/store", icon: Store },
         { label: "Resources", to: "/resources", icon: BookOpen },
         { label: "Notifications", to: "/notifications", icon: Bell },
       ],
@@ -57,7 +57,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Yiroinc Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/store", icon: Store },
         { label: "Tutoring Requests", to: "/tutoring", icon: GraduationCap },
         { label: "Resources", to: "/resources", icon: BookOpen },
         { label: "Notifications", to: "/notifications", icon: Bell },
@@ -69,7 +69,7 @@ const blueprints: Record<Experience, NavBlueprint> = {
     services: {
       label: "Services",
       items: [
-        { label: "Yiroinc Store", to: "/services", icon: Store },
+        { label: "Yiroinc Store", to: "/store", icon: Store },
         { label: "Consulting Requests", to: "/consulting", icon: Briefcase },
         { label: "Procurement Requests", to: "/procurements", icon: Package },
         { label: "Resources", to: "/resources", icon: BookOpen },

@@ -72,7 +72,7 @@ export function AcademicDashboardPage() {
         description="A quick view of your orders, payments and requests."
         actions={
           <Button asChild>
-            <RoleLink to="/services">
+            <RoleLink to="/store">
               Browse Yiroinc Store
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </RoleLink>

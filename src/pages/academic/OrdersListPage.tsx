@@ -62,7 +62,7 @@ export function OrdersListPage() {
         description="Every order placed on your account, with its current status."
         actions={
           <Button asChild>
-            <RoleLink to="/services">
+            <RoleLink to="/store">
               <Plus className="h-4 w-4" strokeWidth={2} />
               New order
             </RoleLink>
@@ -128,7 +128,7 @@ export function OrdersListPage() {
               payment and progress status.
             </p>
             <Button asChild className="mt-5">
-              <RoleLink to="/services">
+              <RoleLink to="/store">
                 <Plus className="h-4 w-4" strokeWidth={2} />
                 Place your first order
               </RoleLink>

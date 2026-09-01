@@ -101,7 +101,7 @@ function ProductCard({ product }: { product: Product }) {
           {formatMoney(product.price, product.currency)}
         </p>
         <Button asChild className="mt-5 w-full">
-          <RoleLink to={`/services/${product.id}`}>
+          <RoleLink to={`/store/${product.id}`}>
             View details
             <ArrowRight className="ml-1.5 h-4 w-4" strokeWidth={2} />
           </RoleLink>

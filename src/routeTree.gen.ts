@@ -37,6 +37,8 @@ import { Route as AcademicProfileIndexRouteImport } from './routes/academic.prof
 import { Route as AcademicResourcesIndexRouteImport } from './routes/academic.resources.index'
 import { Route as AcademicServicesIndexRouteImport } from './routes/academic.services.index'
 import { Route as AcademicServicesProductIdRouteImport } from './routes/academic.services.$productId'
+import { Route as AcademicStoreIndexRouteImport } from './routes/academic.store.index'
+import { Route as AcademicStoreProductIdRouteImport } from './routes/academic.store.$productId'
 import { Route as AdminNotificationsIndexRouteImport } from './routes/admin.notifications.index'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin.orders.index'
 import { Route as AdminOrdersOrderIdRouteImport } from './routes/admin.orders.$orderId'
@@ -64,6 +66,8 @@ import { Route as CorporateProfileIndexRouteImport } from './routes/corporate.pr
 import { Route as CorporateResourcesIndexRouteImport } from './routes/corporate.resources.index'
 import { Route as CorporateServicesIndexRouteImport } from './routes/corporate.services.index'
 import { Route as CorporateServicesProductIdRouteImport } from './routes/corporate.services.$productId'
+import { Route as CorporateStoreIndexRouteImport } from './routes/corporate.store.index'
+import { Route as CorporateStoreProductIdRouteImport } from './routes/corporate.store.$productId'
 import { Route as ExamCheckoutOrderIdRouteImport } from './routes/exam.checkout.$orderId'
 import { Route as ExamNotificationsIndexRouteImport } from './routes/exam.notifications.index'
 import { Route as ExamOrdersIndexRouteImport } from './routes/exam.orders.index'
@@ -74,6 +78,8 @@ import { Route as ExamProfileIndexRouteImport } from './routes/exam.profile.inde
 import { Route as ExamResourcesIndexRouteImport } from './routes/exam.resources.index'
 import { Route as ExamServicesIndexRouteImport } from './routes/exam.services.index'
 import { Route as ExamServicesProductIdRouteImport } from './routes/exam.services.$productId'
+import { Route as ExamStoreIndexRouteImport } from './routes/exam.store.index'
+import { Route as ExamStoreProductIdRouteImport } from './routes/exam.store.$productId'
 import { Route as ExamTutoringIndexRouteImport } from './routes/exam.tutoring.index'
 import { Route as ExamTutoringRequestIdRouteImport } from './routes/exam.tutoring.$requestId'
 import { Route as ExamTutoringNewRouteImport } from './routes/exam.tutoring.new'
@@ -224,6 +230,16 @@ const AcademicServicesProductIdRoute =
     path: '/academic/services/$productId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AcademicStoreIndexRoute = AcademicStoreIndexRouteImport.update({
+  id: '/academic/store/',
+  path: '/academic/store/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademicStoreProductIdRoute = AcademicStoreProductIdRouteImport.update({
+  id: '/academic/store/$productId',
+  path: '/academic/store/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminNotificationsIndexRoute = AdminNotificationsIndexRouteImport.update({
   id: '/admin/notifications/',
   path: '/admin/notifications/',
@@ -366,6 +382,16 @@ const CorporateServicesProductIdRoute =
     path: '/corporate/services/$productId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CorporateStoreIndexRoute = CorporateStoreIndexRouteImport.update({
+  id: '/corporate/store/',
+  path: '/corporate/store/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CorporateStoreProductIdRoute = CorporateStoreProductIdRouteImport.update({
+  id: '/corporate/store/$productId',
+  path: '/corporate/store/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExamCheckoutOrderIdRoute = ExamCheckoutOrderIdRouteImport.update({
   id: '/exam/checkout/$orderId',
   path: '/exam/checkout/$orderId',
@@ -414,6 +440,16 @@ const ExamServicesIndexRoute = ExamServicesIndexRouteImport.update({
 const ExamServicesProductIdRoute = ExamServicesProductIdRouteImport.update({
   id: '/exam/services/$productId',
   path: '/exam/services/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamStoreIndexRoute = ExamStoreIndexRouteImport.update({
+  id: '/exam/store/',
+  path: '/exam/store/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamStoreProductIdRoute = ExamStoreProductIdRouteImport.update({
+  id: '/exam/store/$productId',
+  path: '/exam/store/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExamTutoringIndexRoute = ExamTutoringIndexRouteImport.update({
@@ -473,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/academic/store/$productId': typeof AcademicStoreProductIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/admin/resources/$resourceId': typeof AdminResourcesResourceIdRoute
@@ -484,10 +521,12 @@ export interface FileRoutesByFullPath {
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
   '/corporate/services/$productId': typeof CorporateServicesProductIdRoute
+  '/corporate/store/$productId': typeof CorporateStoreProductIdRoute
   '/exam/checkout/$orderId': typeof ExamCheckoutOrderIdRoute
   '/exam/orders/$orderId': typeof ExamOrdersOrderIdRoute
   '/exam/payments/$paymentId': typeof ExamPaymentsPaymentIdRoute
   '/exam/services/$productId': typeof ExamServicesProductIdRoute
+  '/exam/store/$productId': typeof ExamStoreProductIdRoute
   '/exam/tutoring/$requestId': typeof ExamTutoringRequestIdRoute
   '/exam/tutoring/new': typeof ExamTutoringNewRoute
   '/academic/notifications/': typeof AcademicNotificationsIndexRoute
@@ -496,6 +535,7 @@ export interface FileRoutesByFullPath {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/academic/store/': typeof AcademicStoreIndexRoute
   '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
@@ -512,12 +552,14 @@ export interface FileRoutesByFullPath {
   '/corporate/profile/': typeof CorporateProfileIndexRoute
   '/corporate/resources/': typeof CorporateResourcesIndexRoute
   '/corporate/services/': typeof CorporateServicesIndexRoute
+  '/corporate/store/': typeof CorporateStoreIndexRoute
   '/exam/notifications/': typeof ExamNotificationsIndexRoute
   '/exam/orders/': typeof ExamOrdersIndexRoute
   '/exam/payments/': typeof ExamPaymentsIndexRoute
   '/exam/profile/': typeof ExamProfileIndexRoute
   '/exam/resources/': typeof ExamResourcesIndexRoute
   '/exam/services/': typeof ExamServicesIndexRoute
+  '/exam/store/': typeof ExamStoreIndexRoute
   '/exam/tutoring/': typeof ExamTutoringIndexRoute
   '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
   '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
@@ -546,6 +588,7 @@ export interface FileRoutesByTo {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/academic/store/$productId': typeof AcademicStoreProductIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/admin/resources/$resourceId': typeof AdminResourcesResourceIdRoute
@@ -557,10 +600,12 @@ export interface FileRoutesByTo {
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
   '/corporate/services/$productId': typeof CorporateServicesProductIdRoute
+  '/corporate/store/$productId': typeof CorporateStoreProductIdRoute
   '/exam/checkout/$orderId': typeof ExamCheckoutOrderIdRoute
   '/exam/orders/$orderId': typeof ExamOrdersOrderIdRoute
   '/exam/payments/$paymentId': typeof ExamPaymentsPaymentIdRoute
   '/exam/services/$productId': typeof ExamServicesProductIdRoute
+  '/exam/store/$productId': typeof ExamStoreProductIdRoute
   '/exam/tutoring/$requestId': typeof ExamTutoringRequestIdRoute
   '/exam/tutoring/new': typeof ExamTutoringNewRoute
   '/academic/notifications': typeof AcademicNotificationsIndexRoute
@@ -569,6 +614,7 @@ export interface FileRoutesByTo {
   '/academic/profile': typeof AcademicProfileIndexRoute
   '/academic/resources': typeof AcademicResourcesIndexRoute
   '/academic/services': typeof AcademicServicesIndexRoute
+  '/academic/store': typeof AcademicStoreIndexRoute
   '/admin/notifications': typeof AdminNotificationsIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/payments': typeof AdminPaymentsIndexRoute
@@ -585,12 +631,14 @@ export interface FileRoutesByTo {
   '/corporate/profile': typeof CorporateProfileIndexRoute
   '/corporate/resources': typeof CorporateResourcesIndexRoute
   '/corporate/services': typeof CorporateServicesIndexRoute
+  '/corporate/store': typeof CorporateStoreIndexRoute
   '/exam/notifications': typeof ExamNotificationsIndexRoute
   '/exam/orders': typeof ExamOrdersIndexRoute
   '/exam/payments': typeof ExamPaymentsIndexRoute
   '/exam/profile': typeof ExamProfileIndexRoute
   '/exam/resources': typeof ExamResourcesIndexRoute
   '/exam/services': typeof ExamServicesIndexRoute
+  '/exam/store': typeof ExamStoreIndexRoute
   '/exam/tutoring': typeof ExamTutoringIndexRoute
   '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
   '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
@@ -620,6 +668,7 @@ export interface FileRoutesById {
   '/academic/orders/$orderId': typeof AcademicOrdersOrderIdRoute
   '/academic/payments/$paymentId': typeof AcademicPaymentsPaymentIdRoute
   '/academic/services/$productId': typeof AcademicServicesProductIdRoute
+  '/academic/store/$productId': typeof AcademicStoreProductIdRoute
   '/admin/orders/$orderId': typeof AdminOrdersOrderIdRoute
   '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
   '/admin/resources/$resourceId': typeof AdminResourcesResourceIdRoute
@@ -631,10 +680,12 @@ export interface FileRoutesById {
   '/corporate/orders/$orderId': typeof CorporateOrdersOrderIdRoute
   '/corporate/payments/$paymentId': typeof CorporatePaymentsPaymentIdRoute
   '/corporate/services/$productId': typeof CorporateServicesProductIdRoute
+  '/corporate/store/$productId': typeof CorporateStoreProductIdRoute
   '/exam/checkout/$orderId': typeof ExamCheckoutOrderIdRoute
   '/exam/orders/$orderId': typeof ExamOrdersOrderIdRoute
   '/exam/payments/$paymentId': typeof ExamPaymentsPaymentIdRoute
   '/exam/services/$productId': typeof ExamServicesProductIdRoute
+  '/exam/store/$productId': typeof ExamStoreProductIdRoute
   '/exam/tutoring/$requestId': typeof ExamTutoringRequestIdRoute
   '/exam/tutoring/new': typeof ExamTutoringNewRoute
   '/academic/notifications/': typeof AcademicNotificationsIndexRoute
@@ -643,6 +694,7 @@ export interface FileRoutesById {
   '/academic/profile/': typeof AcademicProfileIndexRoute
   '/academic/resources/': typeof AcademicResourcesIndexRoute
   '/academic/services/': typeof AcademicServicesIndexRoute
+  '/academic/store/': typeof AcademicStoreIndexRoute
   '/admin/notifications/': typeof AdminNotificationsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
@@ -659,12 +711,14 @@ export interface FileRoutesById {
   '/corporate/profile/': typeof CorporateProfileIndexRoute
   '/corporate/resources/': typeof CorporateResourcesIndexRoute
   '/corporate/services/': typeof CorporateServicesIndexRoute
+  '/corporate/store/': typeof CorporateStoreIndexRoute
   '/exam/notifications/': typeof ExamNotificationsIndexRoute
   '/exam/orders/': typeof ExamOrdersIndexRoute
   '/exam/payments/': typeof ExamPaymentsIndexRoute
   '/exam/profile/': typeof ExamProfileIndexRoute
   '/exam/resources/': typeof ExamResourcesIndexRoute
   '/exam/services/': typeof ExamServicesIndexRoute
+  '/exam/store/': typeof ExamStoreIndexRoute
   '/exam/tutoring/': typeof ExamTutoringIndexRoute
   '/admin/requests/consulting/$requestId': typeof AdminRequestsConsultingRequestIdRoute
   '/admin/requests/procurement/$requestId': typeof AdminRequestsProcurementRequestIdRoute
@@ -695,6 +749,7 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/academic/store/$productId'
     | '/admin/orders/$orderId'
     | '/admin/payments/$paymentId'
     | '/admin/resources/$resourceId'
@@ -706,10 +761,12 @@ export interface FileRouteTypes {
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
     | '/corporate/services/$productId'
+    | '/corporate/store/$productId'
     | '/exam/checkout/$orderId'
     | '/exam/orders/$orderId'
     | '/exam/payments/$paymentId'
     | '/exam/services/$productId'
+    | '/exam/store/$productId'
     | '/exam/tutoring/$requestId'
     | '/exam/tutoring/new'
     | '/academic/notifications/'
@@ -718,6 +775,7 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/academic/store/'
     | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/payments/'
@@ -734,12 +792,14 @@ export interface FileRouteTypes {
     | '/corporate/profile/'
     | '/corporate/resources/'
     | '/corporate/services/'
+    | '/corporate/store/'
     | '/exam/notifications/'
     | '/exam/orders/'
     | '/exam/payments/'
     | '/exam/profile/'
     | '/exam/resources/'
     | '/exam/services/'
+    | '/exam/store/'
     | '/exam/tutoring/'
     | '/admin/requests/consulting/$requestId'
     | '/admin/requests/procurement/$requestId'
@@ -768,6 +828,7 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/academic/store/$productId'
     | '/admin/orders/$orderId'
     | '/admin/payments/$paymentId'
     | '/admin/resources/$resourceId'
@@ -779,10 +840,12 @@ export interface FileRouteTypes {
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
     | '/corporate/services/$productId'
+    | '/corporate/store/$productId'
     | '/exam/checkout/$orderId'
     | '/exam/orders/$orderId'
     | '/exam/payments/$paymentId'
     | '/exam/services/$productId'
+    | '/exam/store/$productId'
     | '/exam/tutoring/$requestId'
     | '/exam/tutoring/new'
     | '/academic/notifications'
@@ -791,6 +854,7 @@ export interface FileRouteTypes {
     | '/academic/profile'
     | '/academic/resources'
     | '/academic/services'
+    | '/academic/store'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/payments'
@@ -807,12 +871,14 @@ export interface FileRouteTypes {
     | '/corporate/profile'
     | '/corporate/resources'
     | '/corporate/services'
+    | '/corporate/store'
     | '/exam/notifications'
     | '/exam/orders'
     | '/exam/payments'
     | '/exam/profile'
     | '/exam/resources'
     | '/exam/services'
+    | '/exam/store'
     | '/exam/tutoring'
     | '/admin/requests/consulting/$requestId'
     | '/admin/requests/procurement/$requestId'
@@ -841,6 +907,7 @@ export interface FileRouteTypes {
     | '/academic/orders/$orderId'
     | '/academic/payments/$paymentId'
     | '/academic/services/$productId'
+    | '/academic/store/$productId'
     | '/admin/orders/$orderId'
     | '/admin/payments/$paymentId'
     | '/admin/resources/$resourceId'
@@ -852,10 +919,12 @@ export interface FileRouteTypes {
     | '/corporate/orders/$orderId'
     | '/corporate/payments/$paymentId'
     | '/corporate/services/$productId'
+    | '/corporate/store/$productId'
     | '/exam/checkout/$orderId'
     | '/exam/orders/$orderId'
     | '/exam/payments/$paymentId'
     | '/exam/services/$productId'
+    | '/exam/store/$productId'
     | '/exam/tutoring/$requestId'
     | '/exam/tutoring/new'
     | '/academic/notifications/'
@@ -864,6 +933,7 @@ export interface FileRouteTypes {
     | '/academic/profile/'
     | '/academic/resources/'
     | '/academic/services/'
+    | '/academic/store/'
     | '/admin/notifications/'
     | '/admin/orders/'
     | '/admin/payments/'
@@ -880,12 +950,14 @@ export interface FileRouteTypes {
     | '/corporate/profile/'
     | '/corporate/resources/'
     | '/corporate/services/'
+    | '/corporate/store/'
     | '/exam/notifications/'
     | '/exam/orders/'
     | '/exam/payments/'
     | '/exam/profile/'
     | '/exam/resources/'
     | '/exam/services/'
+    | '/exam/store/'
     | '/exam/tutoring/'
     | '/admin/requests/consulting/$requestId'
     | '/admin/requests/procurement/$requestId'
@@ -915,6 +987,7 @@ export interface RootRouteChildren {
   AcademicOrdersOrderIdRoute: typeof AcademicOrdersOrderIdRoute
   AcademicPaymentsPaymentIdRoute: typeof AcademicPaymentsPaymentIdRoute
   AcademicServicesProductIdRoute: typeof AcademicServicesProductIdRoute
+  AcademicStoreProductIdRoute: typeof AcademicStoreProductIdRoute
   AdminOrdersOrderIdRoute: typeof AdminOrdersOrderIdRoute
   AdminPaymentsPaymentIdRoute: typeof AdminPaymentsPaymentIdRoute
   AdminResourcesResourceIdRoute: typeof AdminResourcesResourceIdRoute
@@ -926,10 +999,12 @@ export interface RootRouteChildren {
   CorporateOrdersOrderIdRoute: typeof CorporateOrdersOrderIdRoute
   CorporatePaymentsPaymentIdRoute: typeof CorporatePaymentsPaymentIdRoute
   CorporateServicesProductIdRoute: typeof CorporateServicesProductIdRoute
+  CorporateStoreProductIdRoute: typeof CorporateStoreProductIdRoute
   ExamCheckoutOrderIdRoute: typeof ExamCheckoutOrderIdRoute
   ExamOrdersOrderIdRoute: typeof ExamOrdersOrderIdRoute
   ExamPaymentsPaymentIdRoute: typeof ExamPaymentsPaymentIdRoute
   ExamServicesProductIdRoute: typeof ExamServicesProductIdRoute
+  ExamStoreProductIdRoute: typeof ExamStoreProductIdRoute
   ExamTutoringRequestIdRoute: typeof ExamTutoringRequestIdRoute
   ExamTutoringNewRoute: typeof ExamTutoringNewRoute
   AcademicNotificationsIndexRoute: typeof AcademicNotificationsIndexRoute
@@ -938,6 +1013,7 @@ export interface RootRouteChildren {
   AcademicProfileIndexRoute: typeof AcademicProfileIndexRoute
   AcademicResourcesIndexRoute: typeof AcademicResourcesIndexRoute
   AcademicServicesIndexRoute: typeof AcademicServicesIndexRoute
+  AcademicStoreIndexRoute: typeof AcademicStoreIndexRoute
   AdminNotificationsIndexRoute: typeof AdminNotificationsIndexRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminPaymentsIndexRoute: typeof AdminPaymentsIndexRoute
@@ -954,12 +1030,14 @@ export interface RootRouteChildren {
   CorporateProfileIndexRoute: typeof CorporateProfileIndexRoute
   CorporateResourcesIndexRoute: typeof CorporateResourcesIndexRoute
   CorporateServicesIndexRoute: typeof CorporateServicesIndexRoute
+  CorporateStoreIndexRoute: typeof CorporateStoreIndexRoute
   ExamNotificationsIndexRoute: typeof ExamNotificationsIndexRoute
   ExamOrdersIndexRoute: typeof ExamOrdersIndexRoute
   ExamPaymentsIndexRoute: typeof ExamPaymentsIndexRoute
   ExamProfileIndexRoute: typeof ExamProfileIndexRoute
   ExamResourcesIndexRoute: typeof ExamResourcesIndexRoute
   ExamServicesIndexRoute: typeof ExamServicesIndexRoute
+  ExamStoreIndexRoute: typeof ExamStoreIndexRoute
   ExamTutoringIndexRoute: typeof ExamTutoringIndexRoute
   AdminRequestsConsultingRequestIdRoute: typeof AdminRequestsConsultingRequestIdRoute
   AdminRequestsProcurementRequestIdRoute: typeof AdminRequestsProcurementRequestIdRoute
@@ -1164,6 +1242,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcademicServicesProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/academic/store/': {
+      id: '/academic/store/'
+      path: '/academic/store'
+      fullPath: '/academic/store/'
+      preLoaderRoute: typeof AcademicStoreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academic/store/$productId': {
+      id: '/academic/store/$productId'
+      path: '/academic/store/$productId'
+      fullPath: '/academic/store/$productId'
+      preLoaderRoute: typeof AcademicStoreProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/notifications/': {
       id: '/admin/notifications/'
       path: '/admin/notifications'
@@ -1353,6 +1445,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CorporateServicesProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/corporate/store/': {
+      id: '/corporate/store/'
+      path: '/corporate/store'
+      fullPath: '/corporate/store/'
+      preLoaderRoute: typeof CorporateStoreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/corporate/store/$productId': {
+      id: '/corporate/store/$productId'
+      path: '/corporate/store/$productId'
+      fullPath: '/corporate/store/$productId'
+      preLoaderRoute: typeof CorporateStoreProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exam/checkout/$orderId': {
       id: '/exam/checkout/$orderId'
       path: '/exam/checkout/$orderId'
@@ -1423,6 +1529,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExamServicesProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exam/store/': {
+      id: '/exam/store/'
+      path: '/exam/store'
+      fullPath: '/exam/store/'
+      preLoaderRoute: typeof ExamStoreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/store/$productId': {
+      id: '/exam/store/$productId'
+      path: '/exam/store/$productId'
+      fullPath: '/exam/store/$productId'
+      preLoaderRoute: typeof ExamStoreProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exam/tutoring/': {
       id: '/exam/tutoring/'
       path: '/exam/tutoring'
@@ -1491,6 +1611,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcademicOrdersOrderIdRoute: AcademicOrdersOrderIdRoute,
   AcademicPaymentsPaymentIdRoute: AcademicPaymentsPaymentIdRoute,
   AcademicServicesProductIdRoute: AcademicServicesProductIdRoute,
+  AcademicStoreProductIdRoute: AcademicStoreProductIdRoute,
   AdminOrdersOrderIdRoute: AdminOrdersOrderIdRoute,
   AdminPaymentsPaymentIdRoute: AdminPaymentsPaymentIdRoute,
   AdminResourcesResourceIdRoute: AdminResourcesResourceIdRoute,
@@ -1502,10 +1623,12 @@ const rootRouteChildren: RootRouteChildren = {
   CorporateOrdersOrderIdRoute: CorporateOrdersOrderIdRoute,
   CorporatePaymentsPaymentIdRoute: CorporatePaymentsPaymentIdRoute,
   CorporateServicesProductIdRoute: CorporateServicesProductIdRoute,
+  CorporateStoreProductIdRoute: CorporateStoreProductIdRoute,
   ExamCheckoutOrderIdRoute: ExamCheckoutOrderIdRoute,
   ExamOrdersOrderIdRoute: ExamOrdersOrderIdRoute,
   ExamPaymentsPaymentIdRoute: ExamPaymentsPaymentIdRoute,
   ExamServicesProductIdRoute: ExamServicesProductIdRoute,
+  ExamStoreProductIdRoute: ExamStoreProductIdRoute,
   ExamTutoringRequestIdRoute: ExamTutoringRequestIdRoute,
   ExamTutoringNewRoute: ExamTutoringNewRoute,
   AcademicNotificationsIndexRoute: AcademicNotificationsIndexRoute,
@@ -1514,6 +1637,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcademicProfileIndexRoute: AcademicProfileIndexRoute,
   AcademicResourcesIndexRoute: AcademicResourcesIndexRoute,
   AcademicServicesIndexRoute: AcademicServicesIndexRoute,
+  AcademicStoreIndexRoute: AcademicStoreIndexRoute,
   AdminNotificationsIndexRoute: AdminNotificationsIndexRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminPaymentsIndexRoute: AdminPaymentsIndexRoute,
@@ -1530,12 +1654,14 @@ const rootRouteChildren: RootRouteChildren = {
   CorporateProfileIndexRoute: CorporateProfileIndexRoute,
   CorporateResourcesIndexRoute: CorporateResourcesIndexRoute,
   CorporateServicesIndexRoute: CorporateServicesIndexRoute,
+  CorporateStoreIndexRoute: CorporateStoreIndexRoute,
   ExamNotificationsIndexRoute: ExamNotificationsIndexRoute,
   ExamOrdersIndexRoute: ExamOrdersIndexRoute,
   ExamPaymentsIndexRoute: ExamPaymentsIndexRoute,
   ExamProfileIndexRoute: ExamProfileIndexRoute,
   ExamResourcesIndexRoute: ExamResourcesIndexRoute,
   ExamServicesIndexRoute: ExamServicesIndexRoute,
+  ExamStoreIndexRoute: ExamStoreIndexRoute,
   ExamTutoringIndexRoute: ExamTutoringIndexRoute,
   AdminRequestsConsultingRequestIdRoute: AdminRequestsConsultingRequestIdRoute,
   AdminRequestsProcurementRequestIdRoute:
