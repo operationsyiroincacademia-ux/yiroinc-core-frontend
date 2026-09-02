@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { NotificationPopover } from "@/components/shared/NotificationPopover";
 import { SidebarNav } from "./SidebarNav";
@@ -29,9 +29,7 @@ export function Topbar({ user }: { user: CurrentUser }) {
         <NotificationPopover experience={user.experience} />
 
         <div className="ml-1 flex min-w-0 items-center gap-2.5 border-l border-border pl-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center bg-primary-soft text-xs font-bold text-primary">
-            {initialsOf(user.displayName)}
-          </span>
+          <UserAvatar user={user} />
           <span className="hidden min-w-0 max-w-44 flex-col leading-tight md:flex lg:max-w-56">
             <span className="truncate text-sm font-semibold text-foreground">
               {user.displayName}
@@ -44,4 +42,42 @@ export function Topbar({ user }: { user: CurrentUser }) {
       </div>
     </header>
   );
+}
+
+function UserAvatar({ user }: { user: CurrentUser }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const avatarUrl = normalizeAvatarUrl(user.avatarUrl);
+  const showImage = Boolean(avatarUrl) && !imageFailed;
+  const altName = user.displayName || user.email || "User";
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [avatarUrl]);
+
+  return (
+    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden bg-primary-soft text-xs font-bold text-primary">
+      {showImage ? (
+        <img
+          src={avatarUrl ?? undefined}
+          alt={`${altName} profile photo`}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        initialsOf(user.displayName)
+      )}
+    </span>
+  );
+}
+
+function normalizeAvatarUrl(value: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }

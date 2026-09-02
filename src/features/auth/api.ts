@@ -15,6 +15,7 @@ export type AuthUser = {
   id: number;
   name: string;
   email: string;
+  avatar_url: string | null;
   is_admin?: string | number | boolean | null;
   roles?: string[];
   capabilities?: Record<string, string | number | boolean | null | undefined>;

@@ -7,6 +7,7 @@ export type CurrentUser = {
   id: number;
   displayName: string;
   email: string;
+  avatarUrl: string | null;
   profileType: ProfileType | null;
   isAdmin: boolean;
   experience: Experience;
@@ -27,6 +28,7 @@ export function useCurrentUser(): CurrentUser {
     id: user?.id ?? 0,
     displayName: user?.name ?? "",
     email: user?.email ?? "",
+    avatarUrl: user?.avatar_url ?? null,
     profileType,
     isAdmin,
     experience: experience ?? resolveExperience(profileType, false, routeExperience),
