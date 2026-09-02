@@ -1,4 +1,4 @@
-import { ShoppingBag, CreditCard, Bell, Briefcase, ArrowRight, Upload } from "lucide-react";
+import { ShoppingBag, CreditCard, Bell, Briefcase, ArrowRight } from "lucide-react";
 
 import { RoleLink } from "@/components/shared/RoleLink";
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
@@ -59,7 +59,6 @@ export function CorporateDashboardPage() {
           detail: `${proofOrder.order_number} · ${orderAmount(proofOrder)} is awaiting your receipt.`,
           cta: "Upload proof",
           to: `/checkout/${proofOrder.id}`,
-          icon: Upload,
         },
       ]
     : [];
@@ -110,15 +109,9 @@ export function CorporateDashboardPage() {
                     key={action.title}
                     className="flex flex-wrap items-center justify-between gap-3 bg-card px-4 py-3"
                   >
-                    <div className="flex min-w-0 items-start gap-3">
-                      <action.icon
-                        className="mt-0.5 h-4 w-4 shrink-0 text-accent"
-                        strokeWidth={1.9}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">{action.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{action.detail}</p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{action.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{action.detail}</p>
                     </div>
                     <Button asChild variant="outline" size="sm">
                       <RoleLink to={action.to}>{action.cta}</RoleLink>
