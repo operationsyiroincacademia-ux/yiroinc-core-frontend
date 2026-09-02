@@ -299,13 +299,19 @@ export function RegisterPage() {
           </p>
           <p className="text-xs leading-5 text-muted-foreground">
             By creating a YiroInc Academia account, you agree to our{" "}
-            <Link to="/privacy-policy" className="font-semibold text-primary hover:underline">
+            <a
+              href="https://yiroincacademia.com/privacy-policy/"
+              className="font-semibold text-primary hover:underline"
+            >
               Privacy Policy
-            </Link>{" "}
+            </a>{" "}
             and{" "}
-            <Link to="/terms-of-service" className="font-semibold text-primary hover:underline">
+            <a
+              href="https://yiroincacademia.com/terms/"
+              className="font-semibold text-primary hover:underline"
+            >
               Terms of Service
-            </Link>
+            </a>
             .
           </p>
         </div>
