@@ -12,7 +12,7 @@ import {
 import type { Pagination } from "@/lib/api/envelope";
 import { DASHBOARD_KEY } from "@/features/dashboard/hooks";
 
-export const NOTIFICATIONS_KEY = ["notifications"];
+export const NOTIFICATIONS_KEY = ["notifications", "list"];
 export const UNREAD_COUNT_KEY = ["notifications", "unread-count"];
 
 type NotificationsData = {

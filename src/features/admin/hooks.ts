@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  NOTIFICATIONS_KEY,
+  UNREAD_COUNT_KEY,
+} from "@/features/notifications/hooks";
+
+import {
   closeAdminUser,
   completeConsultingRequest,
   completeTutorRequest,
@@ -421,8 +426,8 @@ export function useMatchAdminTutorRequest(id: string | number) {
     onSuccess: () => {
       invalidateAdminRequestQueries(queryClient, "tutor", id);
       void queryClient.invalidateQueries({ queryKey: ADMIN_TUTORS_KEY });
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      void queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
+      void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
+      void queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_KEY });
     },
   });
 }
