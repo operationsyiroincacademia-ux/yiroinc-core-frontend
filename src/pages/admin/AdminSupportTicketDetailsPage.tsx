@@ -36,6 +36,7 @@ import {
   attachmentName,
   supportPriorityBadge,
   supportCategoryLabel,
+  supportTicketNumber,
   validateSupportAttachment,
 } from "@/features/support/format";
 import { formatDateTime } from "@/features/commerce/format";
@@ -167,7 +168,7 @@ export function AdminSupportTicketDetailsPage() {
 
       <PageHeader
         title={ticket.subject}
-        description={`${supportCategoryLabel(ticket.category)} · ${formatDateTime(
+        description={`${supportTicketNumber(ticket)} · ${supportCategoryLabel(ticket.category)} · ${formatDateTime(
           lastActivity(ticket),
         )}`}
         actions={

@@ -8,7 +8,11 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { useSupportTickets } from "@/features/support/hooks";
 import { describeApiError } from "@/lib/api/errors";
 import { formatDateTime } from "@/features/commerce/format";
-import { supportCategoryLabel, supportStatusBadge } from "@/features/support/format";
+import {
+  supportCategoryLabel,
+  supportStatusBadge,
+  supportTicketNumber,
+} from "@/features/support/format";
 
 export function SupportListPage() {
   const tickets = useSupportTickets();
@@ -60,15 +64,17 @@ export function SupportListPage() {
             <table className="hidden w-full text-left md:table">
               <thead>
                 <tr className="border-b border-border">
-                  {["Subject", "Category", "Status", "Last updated", ""].map((heading, index) => (
-                    <th
-                      key={heading || `action-${index}`}
-                      scope="col"
-                      className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
-                    >
-                      {heading}
-                    </th>
-                  ))}
+                  {["Ticket #", "Subject", "Category", "Status", "Last updated", ""].map(
+                    (heading, index) => (
+                      <th
+                        key={heading || `action-${index}`}
+                        scope="col"
+                        className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
+                      >
+                        {heading}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -76,6 +82,9 @@ export function SupportListPage() {
                   const badge = supportStatusBadge(ticket.status);
                   return (
                     <tr key={String(ticket.id)} className="transition-colors hover:bg-muted/40">
+                      <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">
+                        {supportTicketNumber(ticket)}
+                      </td>
                       <td className="px-5 py-4 text-sm font-semibold text-foreground">
                         <RoleLink
                           to={`/support/${ticket.id}`}
@@ -119,7 +128,8 @@ export function SupportListPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground">{ticket.subject}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {supportCategoryLabel(ticket.category)} ·{" "}
+                            {supportTicketNumber(ticket)} · {supportCategoryLabel(ticket.category)}{" "}
+                            ·{" "}
                             {formatDateTime(
                               ticket.last_message_at ?? ticket.updated_at ?? ticket.created_at,
                             )}

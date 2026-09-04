@@ -5,8 +5,6 @@ import {
   createSupportTicket,
   fetchSupportTicket,
   fetchSupportTickets,
-  reopenSupportTicket,
-  resolveSupportTicket,
 } from "./api";
 
 export const SUPPORT_TICKETS_KEY = ["support", "tickets"];
@@ -57,28 +55,6 @@ export function useCreateSupportMessage(ticketId: string | number | undefined) {
     mutationFn: createSupportMessage,
     onSuccess: () => {
       invalidateSupportCaches(queryClient, ticketId);
-    },
-  });
-}
-
-export function useResolveSupportTicket(id: string | number | undefined) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: resolveSupportTicket,
-    onSuccess: () => {
-      invalidateSupportCaches(queryClient, id);
-    },
-  });
-}
-
-export function useReopenSupportTicket(id: string | number | undefined) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: reopenSupportTicket,
-    onSuccess: () => {
-      invalidateSupportCaches(queryClient, id);
     },
   });
 }

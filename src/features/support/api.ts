@@ -44,6 +44,7 @@ export type SupportMessage = {
 
 export type SupportTicket = {
   id: string | number;
+  ticket_number?: string | null;
   subject: string;
   category: SupportCategory | string;
   priority?: SupportPriority | string | null;
@@ -161,22 +162,6 @@ export async function createSupportMessage(input: CreateSupportMessageInput) {
         : { body: { message: input.message } }),
     },
   );
-  return res.data;
-}
-
-export async function resolveSupportTicket(id: string | number) {
-  const res = await apiRequest<ApiEnvelope<unknown>>(`/support/tickets/${id}/resolve`, {
-    method: "PATCH",
-    token: token(),
-  });
-  return res.data;
-}
-
-export async function reopenSupportTicket(id: string | number) {
-  const res = await apiRequest<ApiEnvelope<unknown>>(`/support/tickets/${id}/reopen`, {
-    method: "PATCH",
-    token: token(),
-  });
   return res.data;
 }
 

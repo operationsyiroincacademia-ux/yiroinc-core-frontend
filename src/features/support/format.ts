@@ -58,6 +58,13 @@ export function supportCategoryLabel(category: string) {
   return SUPPORT_CATEGORIES.find((item) => item.value === category)?.label ?? "Other";
 }
 
+export function supportTicketNumber(ticket: {
+  id: string | number;
+  ticket_number?: string | null;
+}) {
+  return ticket.ticket_number ?? `#${String(ticket.id).padStart(6, "0")}`;
+}
+
 export function attachmentName(attachment: SupportAttachment) {
   return (
     attachment.file_name ??

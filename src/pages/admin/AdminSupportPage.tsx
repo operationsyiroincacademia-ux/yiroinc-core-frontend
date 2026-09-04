@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AdminSupportStatus, AdminSupportTicket } from "@/features/admin/api";
 import { useAdminSupportTickets } from "@/features/admin/hooks";
-import { adminSupportStatusBadge, supportCategoryLabel } from "@/features/support/format";
+import {
+  adminSupportStatusBadge,
+  supportCategoryLabel,
+  supportPriorityBadge,
+  supportTicketNumber,
+} from "@/features/support/format";
 import { formatDateTime } from "@/features/commerce/format";
 import { AdminLayout, PageHeader } from "@/layouts/AdminLayout/AdminLayout";
 import { describeApiError } from "@/lib/api/errors";
@@ -77,17 +82,23 @@ export function AdminSupportPage() {
               <table className="w-full min-w-[920px] text-left">
                 <thead>
                   <tr className="border-b border-border">
-                    {["Ticket / Subject", "User", "Category", "Status", "Last activity", ""].map(
-                      (heading, index) => (
-                        <th
-                          key={heading || `action-${index}`}
-                          scope="col"
-                          className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
-                        >
-                          {heading}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "Ticket #",
+                      "Subject",
+                      "Category",
+                      "Priority",
+                      "Status",
+                      "Last activity",
+                      "",
+                    ].map((heading, index) => (
+                      <th
+                        key={heading || `action-${index}`}
+                        scope="col"
+                        className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground"
+                      >
+                        {heading}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -110,10 +121,10 @@ export function AdminSupportPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">
-                          {ticket.subject}
+                          {supportTicketNumber(ticket)} · {ticket.subject}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {customerName(ticket)} · {supportCategoryLabel(ticket.category)} ·{" "}
+                          {supportCategoryLabel(ticket.category)} ·{" "}
                           {formatDateTime(lastActivity(ticket))}
                         </p>
                       </div>
@@ -167,6 +178,7 @@ export function AdminSupportPage() {
 
 function SupportTicketRow({ ticket }: { ticket: AdminSupportTicket }) {
   const badge = adminSupportStatusBadge(ticket.status);
+  const priority = supportPriorityBadge(ticket.priority);
   return (
     <tr
       className={
@@ -175,6 +187,9 @@ function SupportTicketRow({ ticket }: { ticket: AdminSupportTicket }) {
           : "transition-colors hover:bg-muted/40"
       }
     >
+      <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">
+        {supportTicketNumber(ticket)}
+      </td>
       <td className="px-5 py-4 text-sm font-semibold text-foreground">
         <Link
           to="/admin/support/$ticketId"
@@ -185,10 +200,10 @@ function SupportTicketRow({ ticket }: { ticket: AdminSupportTicket }) {
         </Link>
       </td>
       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-        {customerName(ticket)}
-      </td>
-      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
         {supportCategoryLabel(ticket.category)}
+      </td>
+      <td className="px-5 py-4">
+        <StatusBadge label={priority.label} tone={priority.tone} />
       </td>
       <td className="px-5 py-4">
         <StatusBadge label={badge.label} tone={badge.tone} />
@@ -206,25 +221,6 @@ function SupportTicketRow({ ticket }: { ticket: AdminSupportTicket }) {
       </td>
     </tr>
   );
-}
-
-function customerName(ticket: AdminSupportTicket) {
-  const customer = customerRecord(ticket);
-  const direct =
-    ticket.user_name ?? ticket.customer_name ?? ticket.name ?? stringValue(customer.display_name);
-  const first = stringValue(customer.first_name);
-  const last = stringValue(customer.last_name);
-  const combined = [first, last].filter(Boolean).join(" ");
-  return ((direct ?? combined) || ticket.user_email) ?? ticket.customer_email ?? "Customer";
-}
-
-function customerRecord(ticket: AdminSupportTicket) {
-  const record = ticket.customer ?? ticket.user;
-  return record && typeof record === "object" ? (record as Record<string, unknown>) : {};
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function lastActivity(ticket: AdminSupportTicket) {

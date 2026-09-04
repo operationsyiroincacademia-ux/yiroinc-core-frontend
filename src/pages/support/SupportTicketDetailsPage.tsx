@@ -6,17 +6,6 @@ import { toast } from "sonner";
 import { RoleLink } from "@/components/shared/RoleLink";
 import { DetailPageLoading, PanelLoading } from "@/components/shared/LoadingState";
 import { AppShell, PageHeader } from "@/layouts/UserLayout/AppShell";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -26,16 +15,13 @@ import {
   type SupportAttachment,
   type SupportMessage,
 } from "@/features/support/api";
-import {
-  useCreateSupportMessage,
-  useResolveSupportTicket,
-  useSupportTicket,
-} from "@/features/support/hooks";
+import { useCreateSupportMessage, useSupportTicket } from "@/features/support/hooks";
 import {
   attachmentDownloadUrl,
   attachmentName,
   supportCategoryLabel,
   supportStatusBadge,
+  supportTicketNumber,
   validateSupportAttachment,
 } from "@/features/support/format";
 import { describeApiError } from "@/lib/api/errors";
@@ -47,7 +33,6 @@ export function SupportTicketDetailsPage() {
   const { ticketId } = useParams({ strict: false }) as { ticketId: string };
   const ticketQuery = useSupportTicket(ticketId);
   const reply = useCreateSupportMessage(ticketId);
-  const resolveTicket = useResolveSupportTicket(ticketId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -156,24 +141,10 @@ export function SupportTicketDetailsPage() {
 
       <PageHeader
         title={ticket.subject}
-        description={`${supportCategoryLabel(ticket.category)} · ${formatDateTime(
+        description={`${supportTicketNumber(ticket)} · ${supportCategoryLabel(ticket.category)} · ${formatDateTime(
           ticket.last_message_at ?? ticket.updated_at ?? ticket.created_at,
         )}`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge label={badge.label} tone={badge.tone} />
-            {!resolved && (
-              <ResolveDialog
-                disabled={resolveTicket.isPending}
-                onConfirm={() =>
-                  resolveTicket.mutate(ticket.id, {
-                    onSuccess: () => toast.success("Support request resolved."),
-                  })
-                }
-              />
-            )}
-          </div>
-        }
+        actions={<StatusBadge label={badge.label} tone={badge.tone} />}
       />
 
       {downloadError && (
@@ -262,30 +233,6 @@ export function SupportTicketDetailsPage() {
         </section>
       )}
     </AppShell>
-  );
-}
-
-function ResolveDialog({ disabled, onConfirm }: { disabled: boolean; onConfirm: () => void }) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
-          Mark as resolved
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Mark this support request as resolved?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This closes the support request and prevents further replies.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Mark as resolved</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   );
 }
 
