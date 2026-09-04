@@ -1,15 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  NOTIFICATIONS_KEY,
-  UNREAD_COUNT_KEY,
-} from "@/features/notifications/hooks";
+import { NOTIFICATIONS_KEY, UNREAD_COUNT_KEY } from "@/features/notifications/hooks";
 
 import {
   closeAdminUser,
   completeConsultingRequest,
   completeTutorRequest,
   createAdminTutor,
+  createAdminSupportMessage,
   createAdminResource,
   dispatchOrder,
   fetchAdminDashboard,
@@ -24,6 +22,8 @@ import {
   fetchAdminResource,
   fetchAdminResources,
   fetchAdminSettings,
+  fetchAdminSupportTicket,
+  fetchAdminSupportTickets,
   fetchAdminUser,
   fetchAdminUsers,
   fetchAdminTutor,
@@ -38,6 +38,7 @@ import {
   startConsultingRequest,
   startTutorRequest,
   updateOrderStatus,
+  updateAdminSupportTicketStatus,
   updateAdminTutor,
   updateAdminResource,
   updateAdminSettings,
@@ -54,7 +55,9 @@ import {
   type AdminPaymentsParams,
   type AdminRequestKind,
   type AdminRequestsParams,
+  type AdminSupportTicketsParams,
 } from "./api";
+import type { CreateSupportMessageInput, SupportStatus } from "@/features/support/api";
 
 export const ADMIN_DASHBOARD_KEY = ["admin", "dashboard"];
 export const ADMIN_PAYMENTS_KEY = ["admin", "payments"];
@@ -70,6 +73,8 @@ export const ADMIN_RESOURCE_KEY = ["admin", "resource"];
 export const ADMIN_USERS_KEY = ["admin", "users"];
 export const ADMIN_USER_KEY = ["admin", "user"];
 export const ADMIN_SETTINGS_KEY = ["admin", "settings"];
+export const ADMIN_SUPPORT_TICKETS_KEY = ["admin", "support", "tickets"];
+export const ADMIN_SUPPORT_TICKET_KEY = ["admin", "support", "ticket"];
 
 export function useAdminDashboard() {
   return useQuery({
@@ -109,6 +114,23 @@ export function useAdminPayment(id: string | number | undefined) {
   return useQuery({
     queryKey: [...ADMIN_PAYMENT_KEY, String(id)],
     queryFn: () => fetchAdminPayment(id!),
+    enabled: id !== undefined && id !== "",
+    retry: false,
+  });
+}
+
+export function useAdminSupportTickets(params: AdminSupportTicketsParams) {
+  return useQuery({
+    queryKey: [...ADMIN_SUPPORT_TICKETS_KEY, params],
+    queryFn: () => fetchAdminSupportTickets(params),
+    retry: false,
+  });
+}
+
+export function useAdminSupportTicket(id: string | number | undefined) {
+  return useQuery({
+    queryKey: [...ADMIN_SUPPORT_TICKET_KEY, String(id)],
+    queryFn: () => fetchAdminSupportTicket(id!),
     enabled: id !== undefined && id !== "",
     retry: false,
   });
@@ -262,6 +284,33 @@ function invalidateAdminPaymentQueries(
   void queryClient.invalidateQueries({ queryKey: ADMIN_DASHBOARD_KEY });
   void queryClient.invalidateQueries({ queryKey: ADMIN_PAYMENTS_KEY });
   void queryClient.invalidateQueries({ queryKey: [...ADMIN_PAYMENT_KEY, String(id)] });
+}
+
+function invalidateAdminSupportQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string | number,
+) {
+  void queryClient.invalidateQueries({ queryKey: ADMIN_SUPPORT_TICKETS_KEY });
+  void queryClient.invalidateQueries({ queryKey: [...ADMIN_SUPPORT_TICKET_KEY, String(id)] });
+  void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
+  void queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_KEY });
+}
+
+export function useCreateAdminSupportMessage(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Omit<CreateSupportMessageInput, "ticketId">) =>
+      createAdminSupportMessage({ ...input, ticketId: id }),
+    onSuccess: () => invalidateAdminSupportQueries(queryClient, id),
+  });
+}
+
+export function useUpdateAdminSupportTicketStatus(id: string | number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (status: SupportStatus) => updateAdminSupportTicketStatus(id, status),
+    onSuccess: () => invalidateAdminSupportQueries(queryClient, id),
+  });
 }
 
 function invalidateAdminOrderPaymentQueries(

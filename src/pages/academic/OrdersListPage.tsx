@@ -25,7 +25,7 @@ const FILTERS = [
   { label: "All", value: "all" },
   { label: "Awaiting payment", value: "awaiting_payment" },
   { label: "Under review", value: "under_review" },
-  { label: "In progress", value: "in_progress" },
+  { label: "Processing", value: "processing" },
   { label: "Completed", value: "completed" },
 ] as const;
 

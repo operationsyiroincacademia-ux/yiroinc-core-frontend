@@ -7,6 +7,7 @@ import {
   Package,
   BookOpen,
   Bell,
+  LifeBuoy,
   Users,
   ClipboardList,
   Store,
@@ -89,13 +90,20 @@ const blueprints: Record<Experience, NavBlueprint> = {
         { label: "Tutors", to: "/tutors", icon: Users },
         { label: "Resources", to: "/resources", icon: BookOpen },
         { label: "Notifications", to: "/notifications", icon: Bell },
-        { label: "Settings", to: "/settings", icon: Settings },
       ],
     },
   },
 };
 
-const accountItems: NavItem[] = [{ label: "Profile", to: "/profile", icon: UserRound }];
+const adminAccountItems: NavItem[] = [
+  { label: "Support Tickets", to: "/support", icon: LifeBuoy },
+  { label: "Settings", to: "/settings", icon: Settings },
+];
+
+const accountItems: NavItem[] = [
+  { label: "Support", to: "/support", icon: LifeBuoy },
+  { label: "Profile", to: "/profile", icon: UserRound },
+];
 
 /** Unused placeholder kept for future corporate services. */
 export const CORPORATE_FUTURE_ICONS = { Briefcase, Package };
@@ -108,7 +116,10 @@ export function navigationFor(experience: Experience): NavSection[] {
   const sections = [
     { label: "Overview", items: resolve(blueprint.overview) },
     { label: blueprint.services.label, items: resolve(blueprint.services.items) },
-    ...(experience === "admin" ? [] : [{ label: "Account", items: resolve(accountItems) }]),
+    {
+      label: "Account",
+      items: resolve(experience === "admin" ? adminAccountItems : accountItems),
+    },
   ];
   return sections.filter((section) => section.items.length > 0);
 }

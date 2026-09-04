@@ -29,7 +29,9 @@ export function userNotificationActionHref(
     normalized === "/orders" ||
     normalized.startsWith("/orders/") ||
     normalized === "/payments" ||
-    normalized.startsWith("/payments/")
+    normalized.startsWith("/payments/") ||
+    normalized === "/support" ||
+    normalized.startsWith("/support/")
   ) {
     return roleHref(experience, normalized);
   }
@@ -70,6 +72,9 @@ function normalizeRelatedType(value: string | null | undefined): string | null {
   if (["procurement", "procurements", "procurement_request"].includes(normalized)) {
     return "procurement";
   }
+  if (["support_ticket", "support_tickets", "support"].includes(normalized)) {
+    return "support_ticket";
+  }
   return null;
 }
 
@@ -82,18 +87,20 @@ function parseActionUrl(actionUrl: string | null | undefined): { type: string; i
   if (!path) return null;
 
   const match = path.match(
-    /^\/(admin\/)?(payments|tutor-requests|consulting-requests|procurements)\/([^/]+)$/,
+    /^\/(admin\/)?(payments|support|tutor-requests|consulting-requests|procurements)\/([^/]+)$/,
   );
   if (!match) return null;
   return {
     type:
       match[2] === "payments"
         ? "payment"
-        : match[2] === "tutor-requests"
-          ? "tutor_request"
-          : match[2] === "consulting-requests"
-            ? "consulting_request"
-            : "procurement",
+        : match[2] === "support"
+          ? "support_ticket"
+          : match[2] === "tutor-requests"
+            ? "tutor_request"
+            : match[2] === "consulting-requests"
+              ? "consulting_request"
+              : "procurement",
     id: decodeURIComponent(match[3]),
   };
 }
@@ -102,6 +109,7 @@ function adminHrefForRelated(type: string, id: string): string | null {
   if (!id) return null;
   const encodedId = encodeURIComponent(id);
   if (type === "payment") return `/admin/payments/${encodedId}`;
+  if (type === "support_ticket") return `/admin/support/${encodedId}`;
   if (type === "tutor_request") return `/admin/requests/tutor/${encodedId}`;
   if (type === "consulting_request") return `/admin/requests/consulting/${encodedId}`;
   if (type === "procurement") return `/admin/requests/procurement/${encodedId}`;

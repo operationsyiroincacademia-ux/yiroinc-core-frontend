@@ -16,6 +16,12 @@ import type { Resource, ResourceSourceType } from "@/features/resources/api";
 import type { ResourceAudience } from "@/features/resources/api";
 import type { ProfileType } from "@/lib/roles";
 import type { BankAccount } from "@/features/commerce/api";
+import type {
+  CreateSupportMessageInput,
+  SupportMessage,
+  SupportStatus,
+  SupportTicket,
+} from "@/features/support/api";
 
 export type AdminDashboardSummary = {
   users: string | number;
@@ -52,6 +58,7 @@ export type AdminDashboard = {
 
 export type AdminPaymentStatus = "all" | "awaiting_verification" | "verified" | "rejected";
 export type AdminOrderStatus = "all" | "awaiting_payment" | "paid" | "completed";
+export type AdminSupportStatus = "all" | SupportStatus;
 export type AdminRequestKind = "tutor" | "consulting" | "procurement";
 export type TutorAvailability = "available" | "unavailable";
 export type TutorStatus = "active" | "inactive";
@@ -160,6 +167,34 @@ export type AdminPaymentsParams = {
 export type AdminPaymentsResponse = {
   payments: Payment[];
   pagination: Pagination | null;
+};
+
+export type AdminSupportTicket = SupportTicket & {
+  user?: AdminUser | Record<string, unknown> | null;
+  customer?: AdminUser | Record<string, unknown> | null;
+  user_id?: string | number | null;
+  user_name?: string | null;
+  customer_name?: string | null;
+  name?: string | null;
+  user_email?: string | null;
+  customer_email?: string | null;
+  email?: string | null;
+};
+
+export type AdminSupportTicketsParams = {
+  status?: AdminSupportStatus;
+  search?: string;
+  page?: number;
+  perPage?: number;
+};
+
+export type AdminSupportTicketsResponse = {
+  tickets: AdminSupportTicket[];
+  pagination: Pagination | null;
+};
+
+export type AdminSupportTicketDetails = AdminSupportTicket & {
+  messages: SupportMessage[];
 };
 
 export type AdminResourcePricing = "all" | "free" | "paid";
@@ -332,6 +367,17 @@ function uploadedResourceFileOf(value: unknown): UploadedResourceFile | null {
   return null;
 }
 
+function supportTicketOf(value: unknown): AdminSupportTicketDetails | null {
+  const record = recordOf(value);
+  const ticket = recordOf(record.ticket ?? record.support_ticket ?? record);
+  if (ticket.id === undefined || ticket.id === null) return null;
+  return {
+    ...(ticket as AdminSupportTicket),
+    user: (ticket.user ?? record.user ?? null) as AdminUser | Record<string, unknown> | null,
+    messages: arrayOf<SupportMessage>(record.messages ?? ticket.messages),
+  };
+}
+
 function summaryOf(value: unknown): AdminDashboardSummary {
   const summary = recordOf(value);
   const resources = countRecord(summary.resources);
@@ -441,6 +487,71 @@ export async function fetchAdminPayments(
     payments: pickList<Payment>(res.data, "payments"),
     pagination: pickPagination(res.data),
   };
+}
+
+export async function fetchAdminSupportTickets(
+  params: AdminSupportTicketsParams = {},
+): Promise<AdminSupportTicketsResponse> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(
+    `/admin/support/tickets?${adminSupportQueryString(params)}`,
+    { token: token() },
+  );
+  return {
+    tickets: pickList<AdminSupportTicket>(res.data, "tickets"),
+    pagination: pickPagination(res.data),
+  };
+}
+
+function adminSupportQueryString(params: AdminSupportTicketsParams = {}) {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 1),
+    per_page: String(params.perPage ?? 20),
+  });
+  if (params.status && params.status !== "all") {
+    query.set("status", params.status);
+  }
+  const search = params.search?.trim();
+  if (search) query.set("search", search);
+  return query.toString();
+}
+
+export async function fetchAdminSupportTicket(
+  id: string | number,
+): Promise<AdminSupportTicketDetails | null> {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/support/tickets/${id}`, {
+    token: token(),
+  });
+  return supportTicketOf(res.data);
+}
+
+function supportFormData(input: { message: string; attachment?: File | null }) {
+  const formData = new FormData();
+  formData.append("message", input.message);
+  if (input.attachment) formData.append("attachment", input.attachment);
+  return formData;
+}
+
+export async function createAdminSupportMessage(input: CreateSupportMessageInput) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(
+    `/admin/support/tickets/${input.ticketId}/messages`,
+    {
+      method: "POST",
+      token: token(),
+      ...(input.attachment
+        ? { formData: supportFormData({ message: input.message, attachment: input.attachment }) }
+        : { body: { message: input.message } }),
+    },
+  );
+  return res.data;
+}
+
+export async function updateAdminSupportTicketStatus(id: string | number, status: SupportStatus) {
+  const res = await apiRequest<ApiEnvelope<unknown>>(`/admin/support/tickets/${id}/status`, {
+    method: "PATCH",
+    token: token(),
+    body: { status },
+  });
+  return res.data;
 }
 
 function queryString(params: {
