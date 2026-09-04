@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { ArrowLeft, Copy, FileText, Info, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { describeApiError, type UploadedProof } from "@/features/commerce/api";
 import {
+  invalidateOrderPaymentCaches,
   useBankAccount,
   useCreatePayment,
   useOrder,
@@ -79,6 +81,7 @@ function Row({ label, value, copyable }: { label: string; value: string; copyabl
 
 export function CheckoutPage() {
   const { orderId } = useParams({ strict: false }) as { orderId: string };
+  const queryClient = useQueryClient();
 
   const orderQuery = useOrder(orderId);
   const bank = useBankAccount();
@@ -153,6 +156,10 @@ export function CheckoutPage() {
       const uploaded = await uploadProof.mutateAsync({
         paymentId: paymentIdRef.current,
         file,
+      });
+      invalidateOrderPaymentCaches(queryClient, {
+        orderId: order.id,
+        paymentId: paymentIdRef.current,
       });
       setResult(uploaded);
       toast.success("Proof of payment uploaded successfully.", {
