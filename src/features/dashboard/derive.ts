@@ -9,12 +9,13 @@ export function countActiveOrders(orders: Order[]) {
 
 export function countPendingPayments(orders: Order[]) {
   return orders.filter((order) => {
+    if (["completed", "cancelled"].includes(order.order_status)) return false;
+
     const status = order.related_payment_status ?? order.payment_status;
     if (status === "rejected") return false;
-    if (order.payment_id) return status === "pending" || status === "submitted";
-    return (
-      order.payment_status === "pending" && !["completed", "cancelled"].includes(order.order_status)
-    );
+    if (status === "submitted" || status === "verified") return false;
+    if (order.payment_id) return status === "pending" && !toFlag(order.has_pop);
+    return order.payment_status === "pending";
   }).length;
 }
 
