@@ -1,8 +1,18 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Download, ExternalLink, FileText, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { ActivityTimeline, type ActivityTimelineItem } from "@/components/shared/ActivityTimeline";
 import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import {
@@ -304,7 +314,10 @@ export function AdminOrderDetailsPage() {
 
           {timeline.length > 0 && (
             <Panel title="Timeline / activity">
-              <Timeline timeline={timeline} />
+              <ActivityTimeline
+                items={timeline.map(adminOrderTimelineItem)}
+                iconForEvent={adminOrderTimelineIcon}
+              />
             </Panel>
           )}
         </div>
@@ -475,21 +488,6 @@ function recordFields(record: Record<string, unknown> | null, keys: string[]) {
     );
 }
 
-function Timeline({ timeline }: { timeline: unknown[] }) {
-  return (
-    <ol className="space-y-4 px-5 py-5">
-      {timeline.map((entry, index) => (
-        <li key={index}>
-          <p className="text-sm text-foreground">{timelineText(entry)}</p>
-          {timelineTime(entry) && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{timelineTime(entry)}</p>
-          )}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 function orderTotal(order: Order) {
   return order.currency
     ? formatMoney(toNumber(order.total_price), order.currency)
@@ -570,19 +568,75 @@ function formatBytes(value: string | number | null | undefined): string | null {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function timelineText(entry: unknown) {
-  if (typeof entry === "string") return humaniseStatus(entry);
-  if (!entry || typeof entry !== "object") return "Activity recorded";
-  const record = entry as Record<string, unknown>;
-  const richText = record.message ?? record.description ?? record.title;
-  if (richText) return String(richText);
-  const event = record.event ?? record.status ?? record.type;
-  return typeof event === "string" ? humaniseStatus(event) : "Activity recorded";
+function adminOrderTimelineItem(entry: unknown): ActivityTimelineItem {
+  const record = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+  const event = stringValue(record.event ?? record.status ?? record.type) ?? "";
+  const known = ADMIN_ORDER_TIMELINE_COPY[event];
+  const title = known?.title ?? stringValue(record.title) ?? humaniseTimelineEvent(event);
+  const description =
+    known?.description ??
+    stringValue(record.description ?? record.message) ??
+    (title === humaniseTimelineEvent(event) ? null : humaniseTimelineEvent(event));
+
+  return {
+    id: timelineId(record, event, entry),
+    event,
+    title,
+    description,
+    created_at: stringValue(record.created_at ?? record.timestamp ?? record.date),
+  };
 }
 
-function timelineTime(entry: unknown) {
-  if (!entry || typeof entry !== "object") return null;
-  const record = entry as Record<string, unknown>;
-  const value = record.created_at ?? record.timestamp ?? record.date;
-  return typeof value === "string" ? formatDateTime(value) : null;
+const ADMIN_ORDER_TIMELINE_COPY: Record<string, { title: string; description: string }> = {
+  order_fulfilled: {
+    title: "Order fulfilled",
+    description: "The customer's order has been fulfilled.",
+  },
+  payment_approved: {
+    title: "Payment approved",
+    description: "The customer's payment has been approved successfully.",
+  },
+  payment_verified: {
+    title: "Payment approved",
+    description: "The customer's payment has been approved successfully.",
+  },
+  proof_submitted: {
+    title: "Proof submitted",
+    description: "Proof of payment was submitted and is awaiting review.",
+  },
+  replacement_proof_submitted: {
+    title: "Replacement proof submitted",
+    description: "A replacement proof of payment was submitted and is awaiting review.",
+  },
+  payment_created: {
+    title: "Payment created",
+    description: "A payment record was created for this order.",
+  },
+};
+
+function adminOrderTimelineIcon(event: string): LucideIcon {
+  if (event === "order_fulfilled" || event === "payment_approved" || event === "payment_verified") {
+    return CheckCircle2;
+  }
+  if (event === "payment_rejected") return XCircle;
+  if (event === "proof_submitted" || event === "replacement_proof_submitted") return FileText;
+  return Clock;
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function timelineId(
+  record: Record<string, unknown>,
+  event: string,
+  entry: unknown,
+): string | number {
+  const id = record.id;
+  if (typeof id === "string" || typeof id === "number") return id;
+  return (stringValue(record.created_at) ?? event) || JSON.stringify(entry);
+}
+
+function humaniseTimelineEvent(event: string) {
+  return event ? humaniseStatus(event) : "Activity recorded";
 }

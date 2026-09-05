@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { ActivityTimeline } from "@/components/shared/ActivityTimeline";
 import { DetailPageLoading } from "@/components/shared/LoadingState";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -295,7 +296,16 @@ export function AdminPaymentDetailsPage() {
                 No payment activity was returned.
               </p>
             ) : (
-              <PaymentActivityTimeline activity={activity} />
+              <ActivityTimeline
+                items={activity.map((event) => ({
+                  id: event.id,
+                  event: event.event,
+                  title: paymentActivityLabel(event),
+                  description: paymentActivityDescription(event),
+                  created_at: event.created_at,
+                }))}
+                iconForEvent={paymentActivityIcon}
+              />
             )}
           </Panel>
         </div>
@@ -379,41 +389,6 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function field(value: ReactNode, label: string) {
   if (!hasValue(value)) return null;
   return <Field label={label}>{value}</Field>;
-}
-
-function PaymentActivityTimeline({ activity }: { activity: PaymentActivity[] }) {
-  return (
-    <ol className="px-5 py-5">
-      {activity.map((event, index) => {
-        const Icon = paymentActivityIcon(event.event);
-        const description = paymentActivityDescription(event);
-        return (
-          <li key={String(event.id)} className="flex gap-3.5">
-            <div className="flex flex-col items-center">
-              <span
-                className={
-                  index === 0
-                    ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent"
-                    : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border"
-                }
-              />
-              {index < activity.length - 1 && <span className="my-1 w-px flex-1 bg-border" />}
-            </div>
-            <div className={index < activity.length - 1 ? "pb-6" : ""}>
-              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-                {paymentActivityLabel(event)}
-              </p>
-              {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {formatDateTime(event.created_at)}
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
-  );
 }
 
 function hasValue(value: ReactNode): boolean {

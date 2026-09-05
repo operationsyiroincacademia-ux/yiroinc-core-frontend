@@ -165,7 +165,7 @@ export async function createSupportMessage(input: CreateSupportMessageInput) {
   return res.data;
 }
 
-export async function downloadSupportAttachment(downloadUrl: string) {
+export async function fetchSupportAttachmentBlob(downloadUrl: string) {
   return apiDownload(normalizeDownloadPath(downloadUrl), token());
 }
 

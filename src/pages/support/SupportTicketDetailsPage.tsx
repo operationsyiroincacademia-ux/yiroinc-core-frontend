@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { ArrowLeft, Download, FileText, Upload } from "lucide-react";
+import { ArrowLeft, FileText, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { RoleLink } from "@/components/shared/RoleLink";
@@ -10,15 +10,10 @@ import { Button } from "@/components/ui/button";
 import { ButtonLoading } from "@/components/ui/button-loading";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  downloadSupportAttachment,
-  type SupportAttachment,
-  type SupportMessage,
-} from "@/features/support/api";
+import type { SupportMessage } from "@/features/support/api";
+import { SupportAttachmentPreview } from "@/features/support/components/SupportAttachmentPreview";
 import { useCreateSupportMessage, useSupportTicket } from "@/features/support/hooks";
 import {
-  attachmentDownloadUrl,
-  attachmentName,
   supportCategoryLabel,
   supportStatusBadge,
   supportTicketNumber,
@@ -38,8 +33,6 @@ export function SupportTicketDetailsPage() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [activeDownload, setActiveDownload] = useState<string | null>(null);
 
   if (ticketQuery.isLoading) {
     return (
@@ -102,33 +95,6 @@ export function SupportTicketDetailsPage() {
     );
   };
 
-  const download = async (attachmentRecord: SupportAttachment) => {
-    const url = attachmentDownloadUrl(attachmentRecord);
-    if (!url) {
-      setDownloadError("This attachment is not available for download.");
-      return;
-    }
-
-    setDownloadError(null);
-    setActiveDownload(url);
-    try {
-      const blob = await downloadSupportAttachment(url);
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = attachmentName(attachmentRecord);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-      toast.success("Attachment download started.");
-    } catch (error) {
-      setDownloadError(describeApiError(error, "This attachment could not be downloaded."));
-    } finally {
-      setActiveDownload(null);
-    }
-  };
-
   return (
     <AppShell>
       <RoleLink
@@ -147,10 +113,6 @@ export function SupportTicketDetailsPage() {
         actions={<StatusBadge label={badge.label} tone={badge.tone} />}
       />
 
-      {downloadError && (
-        <p className="mb-4 bg-danger-soft px-3 py-2.5 text-xs text-danger">{downloadError}</p>
-      )}
-
       <section className="border border-border bg-card">
         <header className="border-b border-border px-5 py-4">
           <h2 className="text-sm font-bold tracking-tight text-foreground">Conversation</h2>
@@ -166,7 +128,7 @@ export function SupportTicketDetailsPage() {
           <ol className="space-y-4 px-5 py-5">
             {messages.map((item) => (
               <li key={String(item.id)}>
-                <MessageCard message={item} activeDownload={activeDownload} onDownload={download} />
+                <MessageCard message={item} />
               </li>
             ))}
           </ol>
@@ -236,15 +198,7 @@ export function SupportTicketDetailsPage() {
   );
 }
 
-function MessageCard({
-  message,
-  activeDownload,
-  onDownload,
-}: {
-  message: SupportMessage;
-  activeDownload: string | null;
-  onDownload: (attachment: SupportAttachment) => void;
-}) {
+function MessageCard({ message }: { message: SupportMessage }) {
   const supportMessage = isSupportMessage(message);
   const primarySender = supportMessage ? "Support" : message.sender_name || "You";
   const secondarySender = senderSecondaryInfo(message, supportMessage);
@@ -275,34 +229,11 @@ function MessageCard({
       </p>
       {attachments.length > 0 && (
         <ul className="mt-4 space-y-2">
-          {attachments.map((attachment, index) => {
-            const url = attachmentDownloadUrl(attachment);
-            return (
-              <li
-                key={String(
-                  attachment.id ?? attachment.file_id ?? `${attachmentName(attachment)}-${index}`,
-                )}
-                className="flex flex-wrap items-center justify-between gap-2 border border-border bg-background px-3 py-2.5"
-              >
-                <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-foreground">
-                  <FileText
-                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                    strokeWidth={2}
-                  />
-                  <span className="truncate">{attachmentName(attachment)}</span>
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!url || activeDownload === url}
-                  onClick={() => onDownload(attachment)}
-                >
-                  <Download className="h-4 w-4" strokeWidth={2} />
-                  Download
-                </Button>
-              </li>
-            );
-          })}
+          {attachments.map((attachment, index) => (
+            <li key={String(attachment.id ?? attachment.file_id ?? index)}>
+              <SupportAttachmentPreview attachment={attachment} />
+            </li>
+          ))}
         </ul>
       )}
     </article>
