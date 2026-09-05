@@ -72,7 +72,7 @@ function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment 
     };
   }, [expectedMimeType, sourceUrl]);
 
-  if (loadState === "fetching" || loadState === "loading-image") {
+  if (loadState === "fetching") {
     return (
       <div className="inline-flex max-w-32 flex-col border border-border bg-background p-2 sm:max-w-36">
         <div className="flex size-28 items-center justify-center bg-muted text-muted-foreground sm:size-32">
@@ -96,7 +96,7 @@ function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment 
         className="group inline-flex max-w-32 flex-col border border-border bg-background p-2 text-left transition-colors hover:border-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:max-w-36"
         onClick={() => setOpen(true)}
       >
-        <span className="block size-28 overflow-hidden bg-muted sm:size-32">
+        <span className="relative block size-28 overflow-hidden bg-muted sm:size-32">
           <img
             src={objectUrl}
             alt={filename}
@@ -104,6 +104,11 @@ function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment 
             onLoad={() => setLoadState("ready")}
             onError={() => setLoadState("decode-error")}
           />
+          {loadState === "loading-image" && (
+            <span className="absolute inset-0 flex items-center justify-center bg-background/60 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2} />
+            </span>
+          )}
         </span>
         <span className="mt-2 flex max-w-28 min-w-0 items-center gap-1.5 text-xs text-muted-foreground sm:max-w-32">
           <ImageIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
