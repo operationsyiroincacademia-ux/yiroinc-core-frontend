@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 type AttachmentKind = "image" | "pdf" | "unknown";
 
 const PDF_OBJECT_URL_TTL_MS = 60_000;
+const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function SupportAttachmentPreview({ attachment }: { attachment: SupportAttachment }) {
   const kind = supportAttachmentKind(attachment);
@@ -23,10 +24,13 @@ export function SupportAttachmentPreview({ attachment }: { attachment: SupportAt
 
 function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment }) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
+  const [loadState, setLoadState] = useState<
+    "fetching" | "loading-image" | "ready" | "fetch-error" | "decode-error"
+  >("fetching");
   const [open, setOpen] = useState(false);
   const filename = attachmentName(attachment);
   const sourceUrl = attachmentDownloadUrl(attachment);
+  const expectedMimeType = expectedImageMimeType(attachment);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,40 +39,53 @@ function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment 
     setObjectUrl(null);
 
     if (!sourceUrl) {
-      setLoadState("error");
+      setLoadState("fetch-error");
       return undefined;
     }
 
-    setLoadState("loading");
+    setLoadState("fetching");
     fetchSupportAttachmentBlob(sourceUrl)
       .then((blob) => {
         if (cancelled) return;
-        nextObjectUrl = URL.createObjectURL(blob);
+
+        if (blob.size === 0) {
+          setLoadState("fetch-error");
+          return;
+        }
+
+        const viewableBlob =
+          isImageMimeType(blob.type) || !expectedMimeType
+            ? blob
+            : blob.slice(0, blob.size, expectedMimeType);
+
+        nextObjectUrl = URL.createObjectURL(viewableBlob);
         setObjectUrl(nextObjectUrl);
-        setLoadState("ready");
+        setLoadState("loading-image");
       })
       .catch(() => {
-        if (!cancelled) setLoadState("error");
+        if (!cancelled) setLoadState("fetch-error");
       });
 
     return () => {
       cancelled = true;
       if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
     };
-  }, [sourceUrl]);
+  }, [expectedMimeType, sourceUrl]);
 
-  if (loadState === "loading") {
+  if (loadState === "fetching" || loadState === "loading-image") {
     return (
-      <div className="w-full max-w-64 border border-border bg-background p-2">
-        <div className="flex h-28 items-center justify-center bg-muted text-muted-foreground">
+      <div className="inline-flex max-w-32 flex-col border border-border bg-background p-2 sm:max-w-36">
+        <div className="flex size-28 items-center justify-center bg-muted text-muted-foreground sm:size-32">
           <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2} />
         </div>
-        <p className="mt-2 truncate text-xs text-muted-foreground">{filename}</p>
+        <p className="mt-2 max-w-28 truncate text-xs text-muted-foreground sm:max-w-32">
+          {filename}
+        </p>
       </div>
     );
   }
 
-  if (loadState === "error" || !objectUrl) {
+  if (loadState === "fetch-error" || loadState === "decode-error" || !objectUrl) {
     return <UnavailableAttachment filename={filename} />;
   }
 
@@ -76,17 +93,19 @@ function ImageAttachmentPreview({ attachment }: { attachment: SupportAttachment 
     <>
       <button
         type="button"
-        className="group block w-full max-w-64 border border-border bg-background p-2 text-left transition-colors hover:border-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="group inline-flex max-w-32 flex-col border border-border bg-background p-2 text-left transition-colors hover:border-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:max-w-36"
         onClick={() => setOpen(true)}
       >
-        <span className="block overflow-hidden bg-muted">
+        <span className="block size-28 overflow-hidden bg-muted sm:size-32">
           <img
             src={objectUrl}
             alt={filename}
-            className="h-32 w-full object-contain transition-transform group-hover:scale-[1.02]"
+            className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
+            onLoad={() => setLoadState("ready")}
+            onError={() => setLoadState("decode-error")}
           />
         </span>
-        <span className="mt-2 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="mt-2 flex max-w-28 min-w-0 items-center gap-1.5 text-xs text-muted-foreground sm:max-w-32">
           <ImageIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
           <span className="truncate">{filename}</span>
         </span>
@@ -238,4 +257,20 @@ function supportAttachmentKind(attachment: SupportAttachment): AttachmentKind {
   }
 
   return "unknown";
+}
+
+function expectedImageMimeType(attachment: SupportAttachment) {
+  const mimeType = String(attachment.mime_type ?? "").toLowerCase();
+  if (isImageMimeType(mimeType)) return mimeType;
+
+  const filename = attachmentName(attachment).toLowerCase();
+  if (/\.(jpe?g)$/.test(filename)) return "image/jpeg";
+  if (filename.endsWith(".png")) return "image/png";
+  if (filename.endsWith(".webp")) return "image/webp";
+
+  return null;
+}
+
+function isImageMimeType(value: string) {
+  return IMAGE_MIME_TYPES.includes(value.toLowerCase());
 }
