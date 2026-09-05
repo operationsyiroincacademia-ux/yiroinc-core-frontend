@@ -1,4 +1,4 @@
-import { apiDownload, apiRequest } from "@/lib/api/client";
+import { API_BASE_URL, apiDownload, apiRequest } from "@/lib/api/client";
 import { getAuthToken } from "@/lib/auth/token";
 import type { ApiEnvelope } from "@/lib/api/envelope";
 
@@ -170,10 +170,29 @@ export async function fetchSupportAttachmentBlob(downloadUrl: string) {
 }
 
 function normalizeDownloadPath(url: string) {
+  const origin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+
   try {
-    const parsed = new URL(url, window.location.origin);
-    return `${parsed.pathname}${parsed.search}`;
+    const parsed = new URL(url, origin);
+    const apiBasePath = apiBasePathname(origin);
+    let pathname = parsed.pathname;
+
+    if (apiBasePath && (pathname === apiBasePath || pathname.startsWith(`${apiBasePath}/`))) {
+      pathname = pathname.slice(apiBasePath.length) || "/";
+    }
+
+    return `${pathname}${parsed.search}`;
   } catch {
     return url.startsWith("/") ? url : `/${url}`;
+  }
+}
+
+function apiBasePathname(origin: string) {
+  if (!API_BASE_URL) return "";
+
+  try {
+    return new URL(API_BASE_URL, origin).pathname.replace(/\/$/, "");
+  } catch {
+    return "";
   }
 }
