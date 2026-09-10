@@ -301,7 +301,7 @@ export function AdminPaymentDetailsPage() {
                   id: event.id,
                   event: event.event,
                   title: paymentActivityLabel(event),
-                  description: paymentActivityDescription(event),
+                  description: adminPaymentActivityDescription(event),
                   created_at: event.created_at,
                 }))}
                 iconForEvent={paymentActivityIcon}
@@ -506,4 +506,16 @@ function paymentActivityIcon(event: PaymentActivity["event"]): LucideIcon {
   if (event === "payment_rejected") return XCircle;
   if (event === "proof_submitted" || event === "replacement_proof_submitted") return FileText;
   return Clock;
+}
+
+const ADMIN_PAYMENT_ACTIVITY_DESCRIPTIONS: Record<string, string> = {
+  payment_approved: "The customer's payment has been approved successfully.",
+  proof_submitted: "The customer submitted proof of payment and it is awaiting review.",
+  payment_created: "A payment record was created for the customer's order.",
+};
+
+function adminPaymentActivityDescription(activity: PaymentActivity): string | null {
+  return (
+    ADMIN_PAYMENT_ACTIVITY_DESCRIPTIONS[activity.event] ?? paymentActivityDescription(activity)
+  );
 }
